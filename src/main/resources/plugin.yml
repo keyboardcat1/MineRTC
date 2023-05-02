@@ -1,0 +1,12 @@
+name: MineRTC
+version: 1.0.0
+main: io.github.keyboardcat1.minertc.MineRTC
+description: The easiest proximity chat plugin to use
+commands:
+  connect:
+    description: Creates link to connect to
+    usage: /connect
+libraries:
+  - org.eclipse.jetty:jetty-server:11.0.14
+  - org.eclipse.jetty.websocket:websocket-jetty-server:11.0.14
+  - org.eclipse.jetty.websocket:websocket-jetty-api:11.0.14

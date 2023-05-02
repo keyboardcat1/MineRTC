@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <!--uuidTool github.com/domske/uuid-tool-->
+    <script>
+        !function(t){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=t();else if("function"==typeof define&&define.amd)define([],t);else{var n;(n="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:this).uuidTool=t()}}(function(){var t;return(function(){function t(n,e,r){function o(u,f){if(!e[u]){if(!n[u]){var s="function"==typeof require&&require;if(!f&&s)return s(u,!0);if(i)return i(u,!0);var c=Error("Cannot find module '"+u+"'");throw c.code="MODULE_NOT_FOUND",c}var p=e[u]={exports:{}};n[u][0].call(p.exports,function(t){return o(n[u][1][t]||t)},p,p.exports,t,n,e,r)}return e[u].exports}for(var i="function"==typeof require&&require,u=0;u<r.length;u++)o(r[u]);return o}return t})()({1:[function(t,n,e){let r=t("uuid-tool");n.exports=r},{"uuid-tool":2}],2:[function(n,e,r){!function(n,o){if("object"==typeof r&&"object"==typeof e)e.exports=o();else if("function"==typeof t&&t.amd)t([],o);else{var i=o();for(var u in i)("object"==typeof r?r:n)[u]=i[u]}}(this,function(){return function(t){var n={};function e(r){if(n[r])return n[r].exports;var o=n[r]={i:r,l:!1,exports:{}};return t[r].call(o.exports,o,o.exports,e),o.l=!0,o.exports}return e.m=t,e.c=n,e.d=function(t,n,r){e.o(t,n)||Object.defineProperty(t,n,{enumerable:!0,get:r})},e.r=function(t){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(t,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(t,"__esModule",{value:!0})},e.t=function(t,n){if(1&n&&(t=e(t)),8&n||4&n&&"object"==typeof t&&t&&t.__esModule)return t;var r=Object.create(null);if(e.r(r),Object.defineProperty(r,"default",{enumerable:!0,value:t}),2&n&&"string"!=typeof t)for(var o in t)e.d(r,o,(function(n){return t[n]}).bind(null,o));return r},e.n=function(t){var n=t&&t.__esModule?function(){return t.default}:function(){return t};return e.d(n,"a",n),n},e.o=function(t,n){return Object.prototype.hasOwnProperty.call(t,n)},e.p="",e(e.s=0)}([function(t,n,e){"use strict";e.r(n),e.d(n,"UuidTool",function(){return i}),e.d(n,"Uuid",function(){return o});var r={uuid:/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i},o=function(){function t(t){this.id="","string"==typeof t?this.fromString(t):Array.isArray(t)?this.fromBytes(t):this.generate()}return t.fromJson=function(n){if("string"==typeof n&&(n=JSON.parse(n)),!n||!n.id)throw TypeError("The input cannot be converted to Uuid.");return new t(n.id)},t.prototype.generate=function(){var t=Array(16).fill(0).map(function(){return 256*Math.random()&255});return t[6]=79&(64|t[6]),this.fromBytes(t),this},t.prototype.fromBytes=function(t){return this.id=t.map(function(t){return("00"+t.toString(16)).slice(-2)}).join("").replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/,"$1-$2-$3-$4-$5"),this.id=this.toString(),this},t.prototype.toBytes=function(){return(this.id.replace(/-/g,"").match(/.{2}/g)||[]).map(function(t){return parseInt(t,16)})},t.prototype.fromString=function(t){return this.id=t.trim(),this.id=this.toString(),this},t.prototype.toString=function(){switch(t.stringExportFormat){default:case"lowercase":return this.id.toLowerCase();case"uppercase":return this.id.toUpperCase()}},t.prototype.isValid=function(){return"string"==typeof this.id&&36===this.id.length&&r.uuid.test(this.id)},t.prototype.equals=function(n){return"string"==typeof n&&(n=new t(n)),this.toString()===n.toString()},t.stringExportFormat="lowercase",t}(),i=function(){function t(){}return t.toBytes=function(t){return(new o).fromString(t).toBytes()},t.toString=function(t){return(new o).fromBytes(t).toString()},t.newUuid=function(){return(new o).toString()},t.isUuid=function(t){return(new o).fromString(t).isValid()},t.compare=function(t,n){return new o(t).equals(new o(n))},t}()}])})},{}]},{},[1])(1)});
+    </script>
+    <!--Bytes to float-->
+    <script>
+        function toFloat($){var f,_=8388607&($=+$),r=2147483648&$?-1:1,n=(2139095040&$)>>>23;function o($){for(var f=4194304;$&&f;)$/=2,f>>>=1;return $}return 255===n?_?NaN:r*(1/0):n?r*((1+o(_))*Math.pow(2,n-127)):_?r*(11754943508222875e-54*o(_)):0}
+    </script>
+    <style>
+
+    </style>
+    <title>Document</title>
+</head>
+<body>
+<div id="audios">
+
+</div>
+
+
+<script>
+const parsedUrl = new URL(window.location.href)
+const localUuid = parsedUrl.searchParams.get("u")
+
+const channels = {}
+/*
+    {
+        UUID: {
+            connection : RTCPeerConnection,
+            audio: {
+                ctx: AudioContext,
+                gain: GainNode,
+                pan: StereoPannerNode
+            }
+        }
+    }
+*/
+
+// MINECRAFT (MAIN)
+
+let MCSocket = new WebSocket(`ws://${parsedUrl.host}/ws/mc${parsedUrl.search}`)
+
+MCSocket.onmessage = async ev =>  {
+    let audioProcessingData = await fromBytes(ev.data)
+    handleRTC(audioProcessingData)
+    handleAudio(audioProcessingData)
+}
+
+// WEBRTC
+
+let RTCSocket = new WebSocket(`ws://${parsedUrl.host}/ws/rtc${parsedUrl.search}`)
+
+function handleRTC(audioProcessingData) {
+    // initate connections not in channels
+    for (const uuid in audioProcessingData)
+        if (!(uuid in channels))
+            initConnection(uuid)
+
+    // close connections not in audioProcessingData
+    for (const uuid in channels) 
+        if (!(uuid in audioProcessingData)) 
+            endConnection(uuid)
+}
+
+function initConnection(uuid) {
+    channels[uuid] = {connection: undefined, audio: undefined}
+
+    const config = {iceServers: [{urls: "stun:stun2.1.google.com:19302"}]}
+    let conn = new RTCPeerConnection(config)
+
+    // add local tracks to connection
+    conn.addTrack(localStream.getAudioTracks()[0])
+    //manage audio nodes and element
+    conn.ontrack = ev => initAudioFromTrack(uuid,ev.track)
+    //send ICE candidate whenever we receive one
+    conn.onicecandidate = ev => send("candidate", uuid, ev.candidate)
+
+    channels[uuid].connection = conn
+
+    //initiate offer only if prioritized
+    if (localUuid > uuid)
+        conn.createOffer()
+            .then(offer => {
+                send("offer", uuid, offer);
+                conn.setLocalDescription(offer)
+            })
+
+    
+}
+
+function endConnection(uuid) {
+    $(`#${uuid}`).remove()
+    channels[uuid].connection.close()
+    delete channels[uuid]
+}
+
+
+
+
+RTCSocket.onmessage = ev => {
+    var data = JSON.parse(ev.data)
+    if (data.to != localUuid || !channels[data.from].connection) return
+    switch(data.type) {
+        case "offer":
+            handleOffer(data)
+            break
+        case "answer":
+            handleAnswer(data)
+            break
+        case "candidate":
+            handleCandidate(data)
+            break
+        default:
+            break
+    }
+}
+
+function handleOffer(data) {
+    let conn = channels[data.from].connection
+
+    conn.setRemoteDescription(new RTCSessionDescription(data.body))
+
+    //create an answer to an offer and send it to
+    conn.createAnswer()
+        .then( answer => send("answer", data.from, answer) )
+}
+
+function handleAnswer(data) {
+    let conn = channels[data.from].connection
+    conn.setRemoteDescription(new RTCSessionDescription(data.body))
+}
+
+//when we got an ice candidate from a remote user
+function handleCandidate(candidate) {
+    let conn = channels[data.from].connection
+    conn.addIceCandidate(new RTCIceCandidate(data.body))
+}
+
+
+
+
+
+
+// AUDIO
+
+let localStream;
+navigator.mediaDevices.getUserMedia({audio: true, video: false})
+    .then(stream => {localStream = stream})
+
+
+
+function initAudioFromTrack(uuid,track) {
+    
+    let stream = new MediaStream();
+    stream.addTrack(track)
+
+    //create GainNode and StereoPannerNode for given uuid and create audio element
+    channels[uuid].audio.ctx = new AudioContext();
+
+    const source = channels[uuid].audio.ctx.createMediaStreamSource(stream)
+
+    channels[uuid].audio.gain = channels[uuid].audio.ctx.createGain()
+    channels[uuid].audio.pan = channels[uuid].audio.ctx.createStereoPanner()
+
+    source.connect(channels[uuid].audio.gain)
+    source.connect(channels[uuid].audio.pan)
+
+    channels[uuid].audio.gain.connect(channels[uuid].audio.ctx.destination)
+    channels[uuid].audio.pan.connect(channels[uuid].audio.ctx.destination)
+
+    //create audio elements
+    $("#audios").append($("<audio/>", {srcObject: stream, id: uuid}))
+}
+
+// TODO: implement this
+function handleAudio(audioProcessingData) {
+    for (const uuid in channels)
+        if (channels[uuid].audio) {
+            channels[uuid].audio.gain.gain.setValueAtTime(audioProcessingData[uuid].gain, channels[uuid].audio.ctx.currentTime)
+            channels[uuid].audio.pan.pan.setValueAtTime(audioProcessingData[uuid].pan, channels[uuid].audio.ctx.currentTime)
+        }
+    
+
+}
+
+
+
+
+
+
+
+
+// UTIL
+
+//send data
+function send(type, to, body) {
+    RTCSocket.send(JSON.stringify({
+        type,
+        from: localUuid,
+        to,
+        body,
+    }))
+}
+
+//AudioProcessingData.tobytes() but in reverse
+function fromBytes(data) {
+
+    const reader = new FileReader()
+    reader.readAsArrayBuffer(data)
+    
+    return new Promise(resolve => reader.onloadend = ev => {
+        let out = {}
+
+        const BYTES = 24
+        let parsedData = new Uint8Array(reader.result)
+        for (let i=0; i<parsedData.length; i+=BYTES) { //for each chunk of bytes encoding <UUID, AudioProcessingData.ChannelProcessingData>
+            let uuid = new uuidTool.Uuid()
+
+            // UUID from first 16 bytes of chunk
+            uuid.fromBytes(Array.from(parsedData.slice(i, i + 16)))
+
+            //AudioProcessingData.ChannelProcessingData.gain from the following 4 bytes of chunk
+            let gain = toFloat((parsedData[i+16] << 8*3) + (parsedData[i+17] << 8*2) + (parsedData[i+18] << 8*1) + (parsedData[i+19] << 8*0))
+
+                //AudioProcessingData.ChannelProcessingData.pan from the last 4 bytes of chunk
+            let pan = toFloat((parsedData[i+20] << 8*3) + (parsedData[i+21] << 8*2) + (parsedData[i+22] << 8*1) + (parsedData[i+23] << 8*0))
+
+            out[uuid.toString()] = {
+                gain,
+                pan,
+            }
+        }
+
+        resolve(out)
+    })
+}
+
+</script>
+</body>
+</html>
