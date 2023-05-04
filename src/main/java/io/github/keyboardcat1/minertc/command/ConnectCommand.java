@@ -33,7 +33,7 @@ public class ConnectCommand implements CommandExecutor {
             String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
 
             MiniMessage mn = MiniMessage.miniMessage();
-            String url = MineRTC.URL + "/main?u=" + uuid + "&t=" + encodedToken;
+            String url = MineRTC.URL + "/?u=" + uuid + "&t=" + encodedToken;
             Component parsed = mn.deserialize("Click to connect: <click:open_url:'" + url + "'><hover:show_text:'Connect'><blue>[Connect]</blue></hover></click>");
 
             player.sendMessage(parsed);

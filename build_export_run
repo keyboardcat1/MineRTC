@@ -1,10 +1,16 @@
 #!/bin/sh
+# build, export to local test server and restart test server
 
 local=/home/keyboardcat/Documents/MineRTC/
 
+# build
 cd $local || exit
 ./gradlew build
+
+# export
 scp build/libs/MineRTC-1.0-SNAPSHOT.jar 192.168.68.112:/home/keyboardcat/mc_servers/IntpMCServer/plugins/
+
+# run
 ssh 192.168.68.112 "tmux send -t mc 'stop' Enter"
 sleep 5
 ssh 192.168.68.112 "tmux send -t mc 'sudo java -jar paper-1.19.4-471.jar -nogui' Enter"

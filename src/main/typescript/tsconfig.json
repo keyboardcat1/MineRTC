@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "module": "system",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "removeComments": false,
+    "preserveConstEnums": true,
+    "outFile": "../resources/static/main.js",
+    "sourceMap": false
+  },
+  "files": ["main.ts"],
+  "exclude": ["node_modules"]
+}

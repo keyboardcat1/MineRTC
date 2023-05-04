@@ -20,7 +20,8 @@ public class AppServer {
         ServletContextHandler servletContextHandler = new ServletContextHandler(server, "/");
 
         //main page servlet
-        servletContextHandler.addServlet(new ServletHolder(new MainServlet()), "/main");
+        servletContextHandler.addServlet(new ServletHolder(new MainServlet()), "/");
+        servletContextHandler.addServlet(new ServletHolder(new StaticServlet()), "/static/*");
         JettyWebSocketServletContainerInitializer.configure(servletContextHandler, (servletContext, container) -> {
             //minecraft data websocket endpoint
             container.addMapping("/ws/mc", MCListener.class);

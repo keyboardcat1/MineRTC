@@ -1,3 +1,5 @@
+
+
 plugins {
     id("java")
 }
@@ -22,6 +24,20 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+// compile TypeScript
+tasks.build {
+    doFirst {
+        exec {
+            workingDir("src/main/typescript")
+            commandLine("npm", "i")
+        }
+        exec {
+            workingDir("src/main/typescript")
+            commandLine("tsc", "--build")
+        }
+    }
 }
 
 java {
