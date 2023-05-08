@@ -37,6 +37,10 @@ tasks.build {
             workingDir("src/main/typescript")
             commandLine("tsc", "--build")
         }
+        exec {
+            workingDir("src/main/typescript")
+            commandLine("browserify","build/main-node.js" , "-o", "../resources/web/static/main.js")
+        }
     }
 }
 

@@ -6,11 +6,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class MainServlet extends HttpServlet {
-
+/**
+ * A servlet which serves main.html
+ */
+class MainServlet extends HttpServlet {
+    @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
-        //serve resources/main.html
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream("main.html");
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream("web/main.html");
         res.setHeader("Content-Type", "text/html");
 
         assert is != null;

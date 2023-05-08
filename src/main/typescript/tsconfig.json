@@ -1,13 +1,12 @@
 {
   "compilerOptions": {
-    "module": "system",
+    "module": "System",
+    "target": "es6",
     "moduleResolution": "node",
     "noImplicitAny": true,
-    "removeComments": false,
-    "preserveConstEnums": true,
-    "outFile": "../resources/static/main.js",
-    "sourceMap": false
+    "allowJs": false,
+    "outFile": "build/main-node.js"
   },
-  "files": ["main.ts"],
-  "exclude": ["node_modules"]
+  "files": ["src/main.ts"]
+
 }

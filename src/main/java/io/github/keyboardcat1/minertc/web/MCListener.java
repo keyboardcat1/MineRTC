@@ -6,31 +6,37 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * A WebSocket endpoint meant to provide {@code AudioProcessingData}
+ * @see io.github.keyboardcat1.minertc.MineRTC
+ */
 public class MCListener implements WebSocketListener {
     private UUID uuid;
     public static HashMap<UUID, Session> sessions = new HashMap<>();
-
+    @Override
     public void onWebSocketConnect(Session session) {
         uuid = UUID.fromString(session.getUpgradeRequest().getParameterMap().get("u").get(0));
 
         //allow a player to only be connected once
-        if (sessions.get(uuid) !=null)
+        if (sessions.get(uuid) != null) {
             sessions.get(uuid).close();
-        sessions.remove(uuid);
+            sessions.remove(uuid);
+        }
 
         String token = session.getUpgradeRequest().getParameterMap().get("t").get(0);
 
-        if (TokenManager.login(uuid, token) && Objects.requireNonNull(Bukkit.getPlayer(uuid)).isOnline()) {
+        //validate token and check that player is online
+        //noinspection DataFlowIssue
+        if (Bukkit.getPlayer(uuid) != null && Bukkit.getPlayer(uuid).isOnline() && TokenManager.login(uuid, token)) {
             sessions.put(uuid, session);
         } else {
             session.close();
         }
 
     }
-
+    @Override
     public void onWebSocketClose(int statusCode, String reason) {
         sessions.remove(uuid);
     }

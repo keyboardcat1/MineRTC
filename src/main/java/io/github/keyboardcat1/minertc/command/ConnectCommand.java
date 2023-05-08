@@ -16,6 +16,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * A command to provide the player with a connection link and to register the player with a randomized token
+ */
 public class ConnectCommand implements CommandExecutor {
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final Base64.Encoder base64Encoder = Base64.getUrlEncoder();
@@ -26,7 +29,6 @@ public class ConnectCommand implements CommandExecutor {
 
             UUID uuid = player.getUniqueId();
 
-            //generate random token
             byte[] randomBytes = new byte[16];
             secureRandom.nextBytes(randomBytes);
             String token = base64Encoder.encodeToString(randomBytes);

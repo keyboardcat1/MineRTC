@@ -4,7 +4,6 @@
     "@types/node": "^18.16.3"
   },
   "dependencies": {
-    "package.json": "^2.0.1",
     "uuid-tool": "^2.0.3"
   }
 }
