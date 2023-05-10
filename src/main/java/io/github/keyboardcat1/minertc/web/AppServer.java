@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.security.KeyStore;
 
 
+
 /**
  * A class encapsulating an embedded Jetty web app, and hence providing a {@code main} method to start the server
  */
@@ -51,7 +52,7 @@ public class AppServer {
         ServletContextHandler servletContextHandler = new ServletContextHandler(server, "/");
         servletContextHandler.addServlet(new ServletHolder(new MainServlet()), "/");
         //ws listeners
-        servletContextHandler.addServlet(new ServletHolder(new StaticServlet()), "/web/static/*");
+        servletContextHandler.addServlet(new ServletHolder(new StaticServlet()), "/static/*");
         JettyWebSocketServletContainerInitializer.configure(servletContextHandler, (servletContext, container) -> {
             container.addMapping("/ws/mc", MCListener.class);
             container.addMapping("/ws/rtc", RTCListener.class);
