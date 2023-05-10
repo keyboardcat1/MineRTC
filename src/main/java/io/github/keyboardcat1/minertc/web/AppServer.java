@@ -35,6 +35,7 @@ public class AppServer {
 
         //load keystore
         InputStream is = AppServer.class.getClassLoader().getResourceAsStream("minertc.jks");
+        assert is != null;
         KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
         ks.load(is, PASSWORD.toCharArray());
 

@@ -31,6 +31,8 @@ public class MineRTC extends JavaPlugin implements Listener {
     public static MineRTC getInstance() {
         return instance;
     }
+
+    @Override
     public void onEnable() {
         instance = this;
         Bukkit.getPluginManager().registerEvents(this, this);
@@ -39,6 +41,7 @@ public class MineRTC extends JavaPlugin implements Listener {
         try {
             AppServer.main(new String[0]);
         } catch (Exception e) {
+            getLogger().severe("Web server failed to start");
             throw new RuntimeException(e);
         }
 
@@ -74,13 +77,13 @@ public class MineRTC extends JavaPlugin implements Listener {
         // send AudioProcessingData to every player connected to /ws/mc
         MCListener.sessions.forEach((uid, session) -> {
             Player player = Bukkit.getPlayer(uid);
-            try {
-                assert player != null;
-                session.getRemote().sendBytes(playerToAudioProcessingData(player).toBytes());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            if (player != null) {
+                try {
+                    session.getRemote().sendBytes(playerToAudioProcessingData(player).toBytes());
+                } catch (IOException e) {
+                    getLogger().warning("Unable to send bytes to player with UUID: " + uid);
+                }
             }
-
         });
     }
 
