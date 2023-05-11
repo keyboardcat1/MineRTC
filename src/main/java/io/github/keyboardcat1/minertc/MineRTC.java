@@ -81,7 +81,7 @@ public class MineRTC extends JavaPlugin implements Listener {
                 try {
                     session.getRemote().sendBytes(playerToAudioProcessingData(player).toBytes());
                 } catch (IOException e) {
-                    getLogger().warning("Unable to send bytes to player with UUID: " + uid);
+                    getLogger().severe("WS : Could not send string");
                 }
             }
         });
