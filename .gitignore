@@ -48,6 +48,6 @@ node_modules/
 
 build_export_run
 
-main.js
+bundle.js
 **/typescript/build/
 /build/

@@ -39,7 +39,7 @@ tasks.build {
         }
         exec {
             workingDir("src/main/typescript")
-            commandLine("browserify","build/main-node.js" , "-o", "../resources/web/static/main.js")
+            commandLine("browserify","build/main.js" , "-o", "../resources/web/static/bundle.js")
         }
     }
 }
