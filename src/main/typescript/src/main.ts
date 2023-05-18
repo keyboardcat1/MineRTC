@@ -1,6 +1,7 @@
 
 import {Uuid} from "uuid-tool"
-import {SignallingConnection, WSConnectionFactory} from "./signallingrtc";
+import * as rtc from "./rtc";
+import * as signal from "./signal";
 
 let parsedUrl = new URL(window.location.href);
 
@@ -31,7 +32,7 @@ interface AudioProcessor {
     pan: StereoPannerNode;
 }
 
-type ConnectionAndProcessor = SignallingConnection & AudioProcessor;
+type ConnectionAndProcessor = rtc.SignallingRTCPeerConnection & AudioProcessor;
 
 const AUDIOS_DIV_QUERY_SELECTOR = "#audios";
 
@@ -39,12 +40,14 @@ let localStream: MediaStream;
 navigator.mediaDevices.getUserMedia({audio: true, video: false})
     .then(stream => {localStream= stream});
 
-const config: RTCConfiguration = {iceServers: [{ urls: "stun:stun.1.google.com:19302" }] }
-const factory: WSConnectionFactory = new WSConnectionFactory(config, LOCAL_UUID, `wss://${parsedUrl.host}/ws/rtc${parsedUrl.search}`);
+const config: RTCConfiguration = {iceServers: [{ urls: "stun:stun.1.google.com:19302" }] };
+
+const channel = new signal.WSSignallingChannel(`wss://${parsedUrl.host}/ws/rtc${parsedUrl.search}`);
+const factory = new rtc.SignallingRTCPeerConnectionFactory(config, channel);
 
 const channels: {[id: string]: ConnectionAndProcessor} = {};
 
-function handleChannelsFromAudioProcessingData(audioProcessingData: audiodata.AudioProcessingData) : void {
+function handleChannelsFromAudioProcessingData(audioProcessingData: audiodata.AudioProcessingData): void {
     for (const uuid in audioProcessingData) {
 
         let channel: ConnectionAndProcessor;
@@ -55,9 +58,7 @@ function handleChannelsFromAudioProcessingData(audioProcessingData: audiodata.Au
             channel = factory.createConnection(uuid) as ConnectionAndProcessor;
 
             channel.addTrack(localStream.getAudioTracks()[0]);
-
-            if (uuid > channel.localId) channel.initiateOffer();
-
+            
             channel.ontrack = ev => {
                 const stream = new MediaStream();
                 stream.addTrack(ev.track);
@@ -69,7 +70,7 @@ function handleChannelsFromAudioProcessingData(audioProcessingData: audiodata.Au
                 const pan = context.createStereoPanner();
 
                 source.connect(gain);
-                source.connect(this.pan);
+                source.connect(pan);
 
                 gain.connect(context.destination);
                 pan.connect(context.destination);
@@ -80,7 +81,7 @@ function handleChannelsFromAudioProcessingData(audioProcessingData: audiodata.Au
 
                 //create audio elements
                 $(AUDIOS_DIV_QUERY_SELECTOR)
-                .append($('<audio/>', {srcObject: stream, id: channel.peerId}));
+                .append($('<audio/>', {srcObject: stream, id: channel.to}));
             };
 
             channels[uuid] = channel;
@@ -107,7 +108,6 @@ function processAudio(processor: AudioProcessor, data: audiodata.ChannelProcessi
         pan.pan.setValueAtTime(data.pan, context.currentTime);
     }
 }
-
 
 
 
