@@ -1,15 +1,16 @@
 package io.github.keyboardcat1.minertc.web;
 
-import com.google.gson.Gson;
 import io.github.keyboardcat1.minertc.MineRTC;
 import io.github.keyboardcat1.minertc.TokenManager;
 import org.bukkit.Bukkit;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -18,8 +19,7 @@ import java.util.UUID;
 public class RTCListener implements WebSocketListener {
     private Session session;
     private UUID uuid;
-    public static HashMap<UUID, Session> sessions = new HashMap<>();
-    private final Gson gson = new Gson();
+    public static final HashMap<UUID, Session> sessions = new HashMap<>();
     @Override
     public void onWebSocketConnect(Session session) {
         this.session = session;
@@ -44,34 +44,31 @@ public class RTCListener implements WebSocketListener {
     }
 
     @Override
-    public void onWebSocketText(String message) {
-        RTCPacket packet = gson.fromJson(message,RTCPacket.class);
-
-        if (!Objects.equals(packet.from, uuid.toString())) return;
-
-        if (sessions.get(UUID.fromString(packet.to)) == null) {
-            RTCPacket errorPacket = new RTCPacket();
-            errorPacket.from = "server";
-            errorPacket.to = uuid.toString();
-            errorPacket.type = "error";
-            try {
-                session.getRemote().sendString(gson.toJson(errorPacket));
-            } catch (IOException e) {
-                MineRTC.getInstance().getLogger().severe("WS : Could not send string");
-            }
-        } else {
-            try {
-                session.getRemote().sendString(message);
-            } catch (IOException e) {
-                MineRTC.getInstance().getLogger().severe("WS : Could not send string");
-            }
-        }
+    public void onWebSocketClose(int statusCode, String reason) {
+        sessions.remove(uuid);
     }
 
-    @SuppressWarnings("unused")
-    static class RTCPacket {
-        String from;
-        String to;
-        String type;
+    @Override
+    public void onWebSocketText(String message) {
+        try {
+            Object obj = new JSONParser().parse(message);
+            JSONObject incoming = (JSONObject) obj;
+            JSONObject outgoing = new JSONObject();
+
+            String to = (String) incoming.get("to");
+            JSONObject data = (JSONObject) incoming.get("data");
+
+            if (sessions.get(UUID.fromString(to)) == null) return;
+
+            outgoing.put("from", uuid.toString());
+            outgoing.put("data", data);
+
+            session.getRemote().sendString(outgoing.toString());
+
+
+        } catch (ParseException ignored) {
+        } catch (IOException e) {
+            MineRTC.getInstance().getLogger().severe("WS : Could not send string");
+        }
     }
 }

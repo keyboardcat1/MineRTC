@@ -11,8 +11,8 @@ import java.util.UUID;
 public class AudioProcessingData extends HashMap<UUID, AudioProcessingData.ChannelProcessingData> {
 
     /**
-     * Converts this object into a {@code ByteBuffer}
-     * @return A {@code ByteBuffer} encoding this object's keys and values
+     * Converts this object into bytes
+     * @return A {@link ByteBuffer} encoding this object's keys and values
      */
     public final ByteBuffer toBytes() {
         ByteBuffer out = ByteBuffer.allocate((16 + AudioProcessingData.ChannelProcessingData.BYTES) * this.size());
@@ -38,8 +38,8 @@ public class AudioProcessingData extends HashMap<UUID, AudioProcessingData.Chann
         public static int BYTES = Float.BYTES + Float.BYTES;
 
         /**
-         * Converts this object into a {@code ByteBuffer}
-         * @return A {@code ByteBuffer} encoding this object's fields
+         * Converts this object into bytes
+         * @return A {@link ByteBuffer} encoding this object's fields
          */
         public ByteBuffer toBytes() {
             ByteBuffer out = ByteBuffer.allocate(BYTES);

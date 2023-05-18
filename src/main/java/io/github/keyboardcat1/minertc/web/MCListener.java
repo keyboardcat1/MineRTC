@@ -1,6 +1,7 @@
 package io.github.keyboardcat1.minertc.web;
 
 import io.github.keyboardcat1.minertc.TokenManager;
+import io.github.keyboardcat1.minertc.audio.AudioProcessingData;
 import org.bukkit.Bukkit;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
@@ -9,7 +10,7 @@ import java.util.HashMap;
 import java.util.UUID;
 
 /**
- * A WebSocket endpoint meant to provide {@code AudioProcessingData}
+ * A WebSocket endpoint meant to provide {@link AudioProcessingData}
  * @see io.github.keyboardcat1.minertc.MineRTC
  */
 @SuppressWarnings("FieldCanBeLocal")
@@ -17,7 +18,7 @@ public class MCListener implements WebSocketListener {
     @SuppressWarnings("unused")
     private Session session;
     private UUID uuid;
-    public static HashMap<UUID, Session> sessions = new HashMap<>();
+    public static final HashMap<UUID, Session> sessions = new HashMap<>();
     @Override
     public void onWebSocketConnect(Session session) {
         this.session = session;

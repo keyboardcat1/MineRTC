@@ -6,13 +6,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 /**
- * A class to provide players with {@code AudioProcessingData} based on their relative positions
+ * A class to provide players with {@link AudioProcessingData} based on their relative positions
  */
 public class AudioProcessingDataGenerator {
     /**
-     * Generates {@code AudioProcessingData} for a given player.
-     * @param player The player for which we generate {@code AudioProcessingData}
-     * @return {@code AudioProcessingData} containing all the required data to process incoming audio for that player
+     * Generates {@link AudioProcessingData} for a given player.
+     * @param player The player for which we wish to generate processing data
+     * @return Processing data containing all the required data to process incoming audio for that player
      */
     public static AudioProcessingData playerToAudioProcessingData(Player player) {
 
@@ -30,11 +30,10 @@ public class AudioProcessingDataGenerator {
     }
 
     /**
-     * Generates {@code ChannelProcessingData} for a given player based on another player
-     * @param main The player for which we generate {@code ChannelProcessingData}
+     * Generates {@link AudioProcessingData.ChannelProcessingData} for a given player based on another player
+     * @param main The player for which wish to generate processing data
      * @param other One of the players providing the incoming audio for the main player
-     * @return {@code ChannelProcessingData} encoding information about the other's players position
-     * relative to the main player
+     * @return Processing data encoding the other's players position relative to the main player
      */
     protected static AudioProcessingData.ChannelProcessingData playersToChannelProcessingData(Player main, Player other) {
         double deltaX = other.getLocation().getX() - main.getLocation().getX();

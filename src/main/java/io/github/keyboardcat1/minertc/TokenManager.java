@@ -6,8 +6,11 @@ import java.util.UUID;
 /**
  * A static class to manage all the player tokens
  */
-public class TokenManager {
+public final class TokenManager {
     private static final HashMap<UUID, String> uuidToToken = new HashMap<>();
+
+    private TokenManager() {
+    }
 
     /**
      * Checks whether a token corresponds to a player UUID
