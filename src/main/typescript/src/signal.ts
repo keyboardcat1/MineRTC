@@ -3,10 +3,10 @@ export type SignallingPortId = string;
 interface Signal {
     data: any;
 }
-interface IncomingSignal extends Signal {
+export interface IncomingSignal extends Signal {
     from: SignallingPortId;
 }
-interface OutgoingSignal extends Signal {
+export interface OutgoingSignal extends Signal {
     to: SignallingPortId;
 }
 
@@ -26,6 +26,7 @@ export abstract class SignallingChannel extends EventTarget {
     onclose: (ev: CloseEvent) => any | null;
 
     abstract signal(signal: OutgoingSignal): void;
+    abstract close(): void;
 
     port(to: SignallingPortId): SignallingPort {
         return new SignallingPort(this, to);
@@ -60,7 +61,7 @@ export abstract class SignallingChannel extends EventTarget {
 
 interface IncomingSignalEventInit extends EventInit, IncomingSignal {
 }
-class IncomingSignalEvent extends Event implements IncomingSignal {
+export class IncomingSignalEvent extends Event implements IncomingSignal {
     readonly from: SignallingPortId;
     readonly data: any;
 
@@ -79,7 +80,7 @@ interface SignallingPortEventMap {
 }
 export class SignallingPort extends EventTarget {
     readonly to: SignallingPortId;
-    
+
     onmessage: (ev: MessageEvent) => any | null;
 
     private readonly channel: SignallingChannel;
@@ -165,5 +166,9 @@ export class WSSignallingChannel extends SignallingChannel {
 
     signal(signal: OutgoingSignal): void {
         this.ws.send(JSON.stringify(signal));
-    }   
+    }
+    
+    close(): void {
+        this.ws.close();
+    }
 }
