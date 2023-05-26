@@ -5,34 +5,29 @@ import * as signal from "./signal";
 
 let parsedUrl = new URL(window.location.href);
 
-if (! (parsedUrl.searchParams.get('u') && parsedUrl.searchParams.get('t')) ) {
-    throw Error('Missing parameters "u" or "t" in URL');
+if (! (parsedUrl.searchParams.get("u") && parsedUrl.searchParams.get("t")) ) {
+    throw Error("Missing parameters \"u\" or \"t\" in URL");
 }
 
-const LOCAL_UUID = parsedUrl.searchParams.get('u') || '';
+const LOCAL_UUID = parsedUrl.searchParams.get("u") || "";
 
 // MineCraft data WebSocket endpoint
 
 let MCSocket = new WebSocket(`wss://${parsedUrl.host}/ws/mc${parsedUrl.search}`);
 
-MCSocket.onmessage = async ev =>  {
+MCSocket.addEventListener("message", async ev =>  {
     let audioProcessingData = await audiodata.AudioProcessingData.fromBytes(ev.data as Blob);
     handleChannelsFromAudioProcessingData(audioProcessingData);
-}
+});
 
-MCSocket.onclose = () => {
-    throw Error('Incorrect login credentials')
+MCSocket.addEventListener("close", () => {
+    throw Error("Incorrect login credentials")
+});
+
+type ConnectionAndStream = {
+    connection: rtc.SignallingRTCPeerConnection,
+    stream: audiodata.ProcessingMediaStream
 };
-
-
-
-interface AudioProcessor {
-    context: AudioContext;
-    gain: GainNode;
-    pan: StereoPannerNode;
-}
-
-type ConnectionAndProcessor = rtc.SignallingRTCPeerConnection & AudioProcessor;
 
 const AUDIOS_DIV_QUERY_SELECTOR = "#audios";
 
@@ -42,48 +37,21 @@ navigator.mediaDevices.getUserMedia({audio: true, video: false})
 
 const config: RTCConfiguration = {iceServers: [{ urls: "stun:stun.1.google.com:19302" }] };
 
-const channel = new signal.WSSignallingChannel(`wss://${parsedUrl.host}/ws/rtc${parsedUrl.search}`);
-const factory = new rtc.SignallingRTCPeerConnectionFactory(config, channel);
+const signallingChannel = new signal.WSSignallingChannel(`wss://${parsedUrl.host}/ws/rtc${parsedUrl.search}`);
+const factory = new rtc.SignallingRTCPeerConnectionFactory(config, signallingChannel);
 
-const channels: {[id: string]: ConnectionAndProcessor} = {};
+const channels: {[id: string]: ConnectionAndStream} = {};
 
 function handleChannelsFromAudioProcessingData(audioProcessingData: audiodata.AudioProcessingData): void {
+    
     for (const uuid in audioProcessingData) {
-
-        let channel: ConnectionAndProcessor;
+        let channel: ConnectionAndStream;
 
         if (channel = channels[uuid]) {
-            processAudio(channel as AudioProcessor, audioProcessingData[uuid]);
+            channel.stream.processAudio(audioProcessingData[uuid])
         } else {
-            channel = factory.createConnection(uuid) as ConnectionAndProcessor;
-
-            channel.addTrack(localStream.getAudioTracks()[0]);
-            
-            channel.ontrack = ev => {
-                const stream = new MediaStream();
-                stream.addTrack(ev.track);
-                //create GainNode and StereoPannerNode for given uuid and create audio element
-                const context = new AudioContext();
-                const source = context.createMediaStreamSource(stream);
-                
-                const gain = context.createGain();
-                const pan = context.createStereoPanner();
-
-                source.connect(gain);
-                source.connect(pan);
-
-                gain.connect(context.destination);
-                pan.connect(context.destination);
-
-                channel.context = context;
-                channel.gain = gain;
-                channel.pan = pan;
-
-                //create audio elements
-                $(AUDIOS_DIV_QUERY_SELECTOR)
-                .append($('<audio/>', {srcObject: stream, id: channel.to}));
-            };
-
+            channel = {connection: factory.createConnection(uuid), stream: new audiodata.ProcessingMediaStream()};
+            configureChannel(channel);
             channels[uuid] = channel;
         }
     }
@@ -92,23 +60,33 @@ function handleChannelsFromAudioProcessingData(audioProcessingData: audiodata.Au
         if (uuid in audioProcessingData) {
             continue;
         } else {
-            channels[uuid].close();
+            channels[uuid].connection.close();
             delete channels[uuid];
+            $('#'+channels[uuid].connection.to as string).remove();
         }
     }
 
 }
 
-function processAudio(processor: AudioProcessor, data: audiodata.ChannelProcessingData): void {
-    const context = processor.context;
-    const gain = processor.gain;
-    const pan = processor.pan;
-    if (context && gain && pan) {
-        gain.gain.setValueAtTime(data.gain, context.currentTime);
-        pan.pan.setValueAtTime(data.pan, context.currentTime);
-    }
+
+
+function configureChannel(channel: ConnectionAndStream): void {
+    //t0d0: add support for channel switching
+    channel.connection.addTrack(localStream.getAudioTracks()[0]);
+
+    channel.connection.addEventListener("connectionstatechange", () => {
+        if (channel.connection.iceConnectionState === "disconnected") delete channels[channel.connection.to];
+    });
+    
+    channel.connection.addEventListener("track", ev => {
+        channel.stream.addTrack(ev.track);
+    });
+
+    $(AUDIOS_DIV_QUERY_SELECTOR)
+    .append($("<audio/>", {srcObject: channel.stream, id: channel.connection.to}));
 }
 
+new Audio
 
 
 namespace audiodata {
@@ -132,7 +110,7 @@ namespace audiodata {
         public static fromBytes(data: Blob): Promise<AudioProcessingData> {
             const reader = new FileReader();
             reader.readAsArrayBuffer(data);
-            return new Promise(resolve => reader.onloadend = () => {
+            return new Promise(resolve => reader.addEventListener("loadend", () => {
                 let out: AudioProcessingData = {};
                 const BYTES = 24;
                 let parsedData = new Uint8Array(reader.result as ArrayBufferLike);
@@ -144,7 +122,36 @@ namespace audiodata {
                     out[uuid.toString()] = {gain,pan,};
                 }
                 resolve(out)
-            })
+            }));
+        }
+    }
+
+    export class ProcessingMediaStream extends MediaStream {
+        readonly audioContext: AudioContext = new AudioContext();
+        readonly gainNode: GainNode;
+        readonly stereoPannerNode: StereoPannerNode;
+        
+        constructor()
+        constructor(stream: MediaStream)
+        constructor(tracks: MediaStreamTrack[])
+        constructor() {
+            super();
+    
+            const source = this.audioContext.createMediaStreamSource(this);
+    
+            this.gainNode = this.audioContext.createGain();
+            this.stereoPannerNode = this.audioContext.createStereoPanner();
+    
+            source.connect(this.gainNode);
+            source.connect(this.stereoPannerNode);
+    
+            this.gainNode.connect(this.audioContext.destination);
+            this.stereoPannerNode.connect(this.audioContext.destination);
+        }
+        
+        processAudio(data: audiodata.ChannelProcessingData): void {
+            this.gainNode.gain.setValueAtTime(data.gain, this.audioContext.currentTime);
+            this.stereoPannerNode.pan.setValueAtTime(data.pan, this.audioContext.currentTime);
         }
     }
 
