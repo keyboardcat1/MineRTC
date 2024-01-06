@@ -45,7 +45,7 @@ public class MineRTC extends JavaPlugin implements Listener {
         }
 
         // commands
-        Objects.requireNonNull(getCommand("connect")).setExecutor(new ConnectCommand(this));
+        Objects.requireNonNull(getCommand("connect")).setExecutor(new ConnectCommand());
 
         //broadcast audio processing data every second
         getServer().getScheduler().runTaskTimer(this, this::broadcastAudioProcessingData, 1L, 20L);

@@ -25,12 +25,6 @@ public class ConnectCommand implements CommandExecutor {
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final Base64.Encoder base64Encoder = Base64.getUrlEncoder();
 
-    public ConnectCommand(MineRTC mineRTC) {
-        this.mineRTC = mineRTC;
-    }
-
-    public MineRTC mineRTC;
-
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
         if (sender instanceof Player player) {
 
@@ -43,7 +37,7 @@ public class ConnectCommand implements CommandExecutor {
 
             MiniMessage mn = MiniMessage.miniMessage();
             String url = MineRTC.getInstance().getURL() + "/?u=" + uuid + "&t=" + encodedToken;
-            Component parsed = mn.deserialize(Objects.requireNonNull(mineRTC.getConfig().getString("connect")), Placeholder.parsed("connect-link", url));
+            Component parsed = mn.deserialize(Objects.requireNonNull(MineRTC.getInstance().getConfig().getString("connect")), Placeholder.parsed("connect-link", url));
 
             player.sendMessage(parsed);
             TokenManager.register(uuid, token);
