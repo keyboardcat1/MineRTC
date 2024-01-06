@@ -1,0 +1,5 @@
+ip: 'domain.com'
+port: 8809
+protocol: 'http'
+
+connect: "Click to connect: <click:open_url:'<connect-link>'><hover:show_text:'Connect'><blue>[Connect]</blue></hover></click>"

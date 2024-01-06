@@ -20,11 +20,6 @@ import static io.github.keyboardcat1.minertc.audio.AudioProcessingDataGenerator.
 
 public class MineRTC extends JavaPlugin implements Listener {
 
-
-    public static final int PORT = 443;
-    public static final String IP = "intpstuff.ddns.net";
-    public static final String URL = "https://" + IP + (PORT==443 ? "" : ":" + PORT);
-
     private static MineRTC instance;
 
     @SuppressWarnings("unused")
@@ -37,6 +32,10 @@ public class MineRTC extends JavaPlugin implements Listener {
         instance = this;
         Bukkit.getPluginManager().registerEvents(this, this);
 
+        // creates a config.yml file
+        saveDefaultConfig();
+        reloadConfig();
+
         //start web server
         try {
             AppServer.main(new String[0]);
@@ -46,7 +45,7 @@ public class MineRTC extends JavaPlugin implements Listener {
         }
 
         // commands
-        Objects.requireNonNull(getCommand("connect")).setExecutor(new ConnectCommand());
+        Objects.requireNonNull(getCommand("connect")).setExecutor(new ConnectCommand(this));
 
         //broadcast audio processing data every second
         getServer().getScheduler().runTaskTimer(this, this::broadcastAudioProcessingData, 1L, 20L);
@@ -87,5 +86,24 @@ public class MineRTC extends JavaPlugin implements Listener {
         });
     }
 
+    // returns the port from the config
+    public int getPort() {
+        return getConfig().getInt("port");
+    }
+
+    // returns the ip from the config
+    public String getIP() {
+        return getConfig().getString("ip");
+    }
+
+    // returns the protocol from the config
+    public String getProtocol() {
+        return getConfig().getString("protocol");
+    }
+
+    // returns the complete url
+    public String getURL() {
+        return getProtocol() + "://" + getIP() + (getPort()==443 ? "" : ":" + getPort());
+    }
 
 }
