@@ -39,6 +39,11 @@ public class MCListener implements WebSocketListener {
         } else {
             session.close();
         }
+    }
 
+    @Override
+    public void onWebSocketClose(int statusCode, String reason) {
+        WebSocketListener.super.onWebSocketClose(statusCode, reason);
+        sessions.remove(uuid);
     }
 }
