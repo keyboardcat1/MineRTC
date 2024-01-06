@@ -61,7 +61,7 @@ public class AppServer {
 
 
 
-        connector.setPort(MineRTC.PORT);
+        connector.setPort(MineRTC.getInstance().getPort());
         server.addConnector(connector);
         server.setHandler(servletContextHandler);
         server.start();
