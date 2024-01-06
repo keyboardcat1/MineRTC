@@ -35,7 +35,7 @@ tasks.build {
         }
         exec {
             workingDir("src/main/typescript")
-            commandLine("tsc", "--build")
+            commandLine("npx", "tsc", "--build")
         }
         exec {
             workingDir("src/main/typescript")

@@ -1,9 +1,11 @@
 {
   "devDependencies": {
     "@types/jquery": "^3.5.16",
-    "@types/node": "^18.16.3"
+    "@types/node": "^18.16.3",
+    "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@keyboardcat1/ezrtc": "github:keyboardcat1/ezrtc",
     "uuid-tool": "^2.0.3"
   }
 }
