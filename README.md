@@ -23,4 +23,3 @@ The plugin jar will be in `build/libs`
 #### Build dependencies
 - npm
   - browserify
-- tsc
