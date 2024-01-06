@@ -5,17 +5,17 @@ import java.util.HashMap;
 import java.util.UUID;
 
 /**
- * A class representing the required audio processing data to process each incoming player audio channel indexed by
+ * A class representing the required audio processing data to process each incoming player audio stream indexed by
  * player UUID
  */
-public class AudioProcessingData extends HashMap<UUID, AudioProcessingData.ChannelProcessingData> {
+public class AudioProcessingData extends HashMap<UUID, AudioProcessingData.StreamProcessingData> {
 
     /**
      * Converts this object into bytes
      * @return A {@link ByteBuffer} encoding this object's keys and values
      */
     public final ByteBuffer toBytes() {
-        ByteBuffer out = ByteBuffer.allocate((16 + AudioProcessingData.ChannelProcessingData.BYTES) * this.size());
+        ByteBuffer out = ByteBuffer.allocate((16 + StreamProcessingData.BYTES) * this.size());
         this.forEach((uid, processingData) -> {
             out.putLong(uid.getMostSignificantBits());
             out.putLong(uid.getLeastSignificantBits());
@@ -31,7 +31,7 @@ public class AudioProcessingData extends HashMap<UUID, AudioProcessingData.Chann
      * @param gain The gain factor, ranging from 0 to 1
      * @param pan The pan factor, randing from -1 to 1
      */
-    public record ChannelProcessingData(float gain, float pan) {
+    public record StreamProcessingData(float gain, float pan) {
         /**
          * The total size in bytes of all of this object's fields
          */

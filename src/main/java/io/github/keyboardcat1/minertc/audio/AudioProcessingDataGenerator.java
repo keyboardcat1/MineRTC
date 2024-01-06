@@ -30,12 +30,12 @@ public class AudioProcessingDataGenerator {
     }
 
     /**
-     * Generates {@link AudioProcessingData.ChannelProcessingData} for a given player based on another player
+     * Generates {@link AudioProcessingData.StreamProcessingData} for a given player based on another player
      * @param main The player for which wish to generate processing data
      * @param other One of the players providing the incoming audio for the main player
      * @return Processing data encoding the other's players position relative to the main player
      */
-    protected static AudioProcessingData.ChannelProcessingData playersToChannelProcessingData(Player main, Player other) {
+    protected static AudioProcessingData.StreamProcessingData playersToChannelProcessingData(Player main, Player other) {
         double deltaX = other.getLocation().getX() - main.getLocation().getX();
         double deltaY = other.getLocation().getY() - main.getLocation().getY();
         double theta = Math.atan2(deltaY, deltaX);
@@ -46,7 +46,7 @@ public class AudioProcessingDataGenerator {
         float gain = (float) (1 / (distance + 1));
         float pan = (float) Math.sin(deltaTheta);
 
-        return new AudioProcessingData.ChannelProcessingData(gain, pan);
+        return new AudioProcessingData.StreamProcessingData(gain, pan);
     }
 
 
