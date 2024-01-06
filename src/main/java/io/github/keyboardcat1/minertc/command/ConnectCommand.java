@@ -42,7 +42,7 @@ public class ConnectCommand implements CommandExecutor {
             String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
 
             MiniMessage mn = MiniMessage.miniMessage();
-            String url = mineRTC.getURL() + "/?u=" + uuid + "&t=" + encodedToken;
+            String url = MineRTC.getInstance().getURL() + "/?u=" + uuid + "&t=" + encodedToken;
             Component parsed = mn.deserialize(Objects.requireNonNull(mineRTC.getConfig().getString("connect")), Placeholder.parsed("connect-link", url));
 
             player.sendMessage(parsed);
