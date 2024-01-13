@@ -10,6 +10,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -30,13 +31,13 @@ public class RTCListener implements WebSocketListener {
         String token = session.getUpgradeRequest().getParameterMap().get("t").get(0);
 
         //validate token and check that player is online
-        //noinspection DataFlowIssue
-        if (Bukkit.getPlayer(uuid) != null && Bukkit.getPlayer(uuid).isOnline() && TokenManager.login(uuid, token)) {
+        if (Bukkit.getPlayer(uuid) != null && TokenManager.login(uuid, token)) {
             //allow a player to only be connected once
             if (sessions.get(uuid) != null) {
                 sessions.get(uuid).close();
             }
             sessions.put(uuid, session);
+            session.setIdleTimeout(Duration.ZERO);
         } else {
             session.close();
         }

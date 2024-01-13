@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -29,11 +30,11 @@ public class MCListener implements WebSocketListener {
         String token = session.getUpgradeRequest().getParameterMap().get("t").get(0);
 
         //validate token and check that player is online
-        //noinspection DataFlowIssue
-        if (Bukkit.getPlayer(uuid) != null && Bukkit.getPlayer(uuid).isOnline() && TokenManager.login(uuid, token)) {
+        if (Bukkit.getPlayer(uuid) != null && TokenManager.login(uuid, token)) {
             //allow a player to only be connected once
             if (sessions.get(uuid) != null) {
                 sessions.get(uuid).close();
+                session.setIdleTimeout(Duration.ZERO);
             }
             sessions.put(uuid, session);
         } else {
@@ -43,7 +44,6 @@ public class MCListener implements WebSocketListener {
 
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
-        WebSocketListener.super.onWebSocketClose(statusCode, reason);
         sessions.remove(uuid);
     }
 }
