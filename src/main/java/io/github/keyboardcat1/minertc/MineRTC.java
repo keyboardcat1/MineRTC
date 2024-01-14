@@ -36,7 +36,7 @@ public class MineRTC extends JavaPlugin implements Listener {
         saveDefaultConfig();
         reloadConfig();
 
-        //start web server
+        // start web server
         try {
             AppServer.main(new String[0]);
         } catch (Exception e) {
@@ -47,7 +47,7 @@ public class MineRTC extends JavaPlugin implements Listener {
         // commands
         Objects.requireNonNull(getCommand("connect")).setExecutor(new ConnectCommand());
 
-        //broadcast audio processing data every second
+        // broadcast audio processing data every second
         getServer().getScheduler().runTaskTimer(this, this::broadcastAudioProcessingData, 1L, 20L);
     }
 
@@ -74,8 +74,8 @@ public class MineRTC extends JavaPlugin implements Listener {
 
     private void broadcastAudioProcessingData() {
         // send AudioProcessingData to every player connected to /ws/mc
-        MCListener.sessions.forEach((uid, session) -> {
-            Player player = Bukkit.getPlayer(uid);
+        MCListener.sessions.forEach((uuid, session) -> {
+            Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
                 try {
                     session.getRemote().sendBytes(playerToAudioProcessingData(player).toBytes());
@@ -92,18 +92,18 @@ public class MineRTC extends JavaPlugin implements Listener {
     }
 
     // returns the ip from the config
-    public String getIP() {
+    public String getIp() {
         return getConfig().getString("ip");
     }
 
-    // returns the protocol from the config
-    public String getProtocol() {
-        return getConfig().getString("protocol");
+    // returns the connect message
+    public String getConnectMessage() {
+        return getConfig().getString("connect-message");
     }
 
     // returns the complete url
     public String getURL() {
-        return getProtocol() + "://" + getIP() + (getPort()==443 ? "" : ":" + getPort());
+        return "https://" + getIp() + (getPort() == 443 ? "" : ":" + getPort());
     }
 
 }

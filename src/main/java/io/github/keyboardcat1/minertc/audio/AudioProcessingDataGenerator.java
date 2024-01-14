@@ -9,6 +9,8 @@ import org.bukkit.entity.Player;
  * A class to provide players with {@link AudioProcessingData} based on their relative positions
  */
 public class AudioProcessingDataGenerator {
+    public static final int THRESHOLD = 50;
+
     /**
      * Generates {@link AudioProcessingData} for a given player.
      * @param player The player for which we wish to generate processing data
@@ -18,7 +20,6 @@ public class AudioProcessingDataGenerator {
 
         AudioProcessingData out = new AudioProcessingData();
         Bukkit.getOnlinePlayers().forEach((other) -> {
-            int THRESHOLD = 50;
             if (player.equals(other)) return;
             if (MCListener.sessions.get(other.getUniqueId()) == null || RTCListener.sessions.get(other.getUniqueId()) == null)
                 return;

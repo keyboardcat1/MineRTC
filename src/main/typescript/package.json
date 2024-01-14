@@ -5,7 +5,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@keyboardcat1/ezrtc": "github:keyboardcat1/ezrtc",
+    "@keyboardcat1/ezrtc": "file:../../../../EzRTC",
     "uuid-tool": "^2.0.3"
   }
 }

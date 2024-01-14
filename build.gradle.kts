@@ -1,3 +1,4 @@
+import org.gradle.process.internal.ExecException
 
 
 plugins {
@@ -33,6 +34,14 @@ tasks.build {
             workingDir("src/main/typescript")
             commandLine("npm", "i")
         }
+        try { exec {
+            workingDir("src/main/typescript")
+            commandLine("rm", "../resources/web/static/bundle.js")
+        } } catch (_: ExecException) {}
+        try { exec {
+            workingDir("src/main/typescript")
+            commandLine("rm", "-r", "build/")
+        } } catch (_: ExecException) {}
         exec {
             workingDir("src/main/typescript")
             commandLine("npx", "tsc", "--build")
