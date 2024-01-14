@@ -32,7 +32,7 @@ tasks.build {
     doFirst {
         exec {
             workingDir("src/main/typescript")
-            commandLine("npm", "i")
+            commandLine("npm.cmd", "i")
         }
         try { exec {
             workingDir("src/main/typescript")
@@ -44,11 +44,11 @@ tasks.build {
         } } catch (_: ExecException) {}
         exec {
             workingDir("src/main/typescript")
-            commandLine("npx", "tsc", "--build")
+            commandLine("npx.cmd", "tsc", "--build")
         }
         exec {
             workingDir("src/main/typescript")
-            commandLine("npx", "browserify","build/main.js" , "-o", "../resources/web/static/bundle.js")
+            commandLine("npx.cmd", "browserify","build/main.js" , "-o", "../resources/web/static/bundle.js")
         }
     }
 }
