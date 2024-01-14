@@ -1,5 +1,7 @@
 import org.gradle.process.internal.ExecException
+import java.util.*
 
+var osName: String = System.getProperty("os.name").lowercase(Locale.getDefault())
 
 plugins {
     id("java")
@@ -32,7 +34,7 @@ tasks.build {
     doFirst {
         exec {
             workingDir("src/main/typescript")
-            commandLine("npm.cmd", "i")
+            if (osName.contains("windows")) commandLine("npm.cmd", "i") else commandLine("npm", "i")
         }
         try { exec {
             workingDir("src/main/typescript")
@@ -44,11 +46,11 @@ tasks.build {
         } } catch (_: ExecException) {}
         exec {
             workingDir("src/main/typescript")
-            commandLine("npx.cmd", "tsc", "--build")
+            if (osName.contains("windows")) commandLine("npx.cmd", "tsc", "--build") else commandLine("npx", "tsc", "--build")
         }
         exec {
             workingDir("src/main/typescript")
-            commandLine("npx.cmd", "browserify","build/main.js" , "-o", "../resources/web/static/bundle.js")
+            if (osName.contains("windows")) commandLine("npx.cmd", "browserify","build/main.js" , "-o", "../resources/web/static/bundle.js") else commandLine("npx", "browserify","build/main.js" , "-o", "../resources/web/static/bundle.js")
         }
     }
 }
