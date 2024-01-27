@@ -64,7 +64,7 @@ public class RTCListener implements WebSocketListener {
             outgoing.put("from", uuid.toString());
             outgoing.put("data", data);
 
-            session.getRemote().sendString(outgoing.toString());
+            sessions.get(UUID.fromString(to)).getRemote().sendString(outgoing.toString());
 
 
         } catch (ParseException ignored) {
