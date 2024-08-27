@@ -22,7 +22,7 @@ MCSocket.addEventListener("message", async ev =>  {
     handleChannelsFromAudioProcessingData(audioProcessingData);
 });
 MCSocket.addEventListener("close", () => {
-    throw Error("Incorrect login credentials");
+    throw Error("Connection closed");
 });
 
 const streams: {[id: string]: audio.ProcessedRTCHTMLMediaStream} = {};
@@ -113,12 +113,14 @@ export class ProcessedRTCHTMLMediaStream extends ezrtc.utils.RTCHTMLMediaStream 
     private stereoPannerNode = this.audioContext.createStereoPanner();
 
     constructor(connection: RTCPeerConnection, element: HTMLMediaElement) {
-        super(connection, element, new MediaStream());
-        const source = this.audioContext.createMediaStreamSource(this);
-        source.connect(this.gainNode);
-        source.connect(this.stereoPannerNode);
-        this.gainNode.connect(this.audioContext.destination);
-        this.stereoPannerNode.connect(this.audioContext.destination);
+        super(connection, element);
+        this.connection.addEventListener("track", ev => {
+            const source = this.audioContext.createMediaStreamSource(this);
+            source.connect(this.gainNode);
+            source.connect(this.stereoPannerNode);
+            this.gainNode.connect(this.audioContext.destination);
+            this.stereoPannerNode.connect(this.audioContext.destination);
+        })
     }
 
     processAudio(data: audio.StreamProcessingData): void {
