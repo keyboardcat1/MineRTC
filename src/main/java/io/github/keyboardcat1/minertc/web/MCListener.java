@@ -16,7 +16,6 @@ import java.util.UUID;
  */
 @SuppressWarnings("FieldCanBeLocal")
 public class MCListener implements WebSocketListener {
-    @SuppressWarnings("unused")
     private Session session;
     private UUID uuid;
     public static final HashMap<UUID, Session> sessions = new HashMap<>();

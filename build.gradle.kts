@@ -29,32 +29,6 @@ tasks.test {
     useJUnitPlatform()
 }
 
-// compile TypeScript
-tasks.build {
-    doFirst {
-        exec {
-            workingDir("src/main/typescript")
-            if (osName.contains("windows")) commandLine("npm.cmd", "i") else commandLine("npm", "i")
-        }
-        try { exec {
-            workingDir("src/main/typescript")
-            commandLine("rm", "../resources/web/static/bundle.js")
-        } } catch (_: ExecException) {}
-        try { exec {
-            workingDir("src/main/typescript")
-            commandLine("rm", "-r", "build/")
-        } } catch (_: ExecException) {}
-        exec {
-            workingDir("src/main/typescript")
-            if (osName.contains("windows")) commandLine("npx.cmd", "tsc", "--build") else commandLine("npx", "tsc", "--build")
-        }
-        exec {
-            workingDir("src/main/typescript")
-            if (osName.contains("windows")) commandLine("npx.cmd", "browserify","build/main.js" , "-o", "../resources/web/static/bundle.js") else commandLine("npx", "browserify","build/main.js" , "-o", "../resources/web/static/bundle.js")
-        }
-    }
-}
-
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }

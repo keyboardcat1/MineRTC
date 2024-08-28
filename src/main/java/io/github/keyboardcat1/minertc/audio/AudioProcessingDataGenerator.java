@@ -23,7 +23,7 @@ public class AudioProcessingDataGenerator {
             if (player.equals(other)) return;
             if (MCListener.sessions.get(other.getUniqueId()) == null || RTCListener.sessions.get(other.getUniqueId()) == null)
                 return;
-            if (player.getLocation().distance(other.getLocation()) > THRESHOLD) return;
+            // if (player.getLocation().distance(other.getLocation()) > THRESHOLD) return;
 
             out.put(other.getUniqueId(), playersToChannelProcessingData(player, other));
         });
@@ -44,10 +44,11 @@ public class AudioProcessingDataGenerator {
         double distance = main.getLocation().distance(other.getLocation());
         double deltaTheta = theta - Math.toRadians(main.getLocation().getYaw());
 
-        float gain = (float) (1 / (distance + 1));
+        byte muted = (byte)(distance>THRESHOLD ? 1 : 0);
+        float gain = (float)(1 / (distance + 1));
         float pan = (float) Math.sin(deltaTheta);
 
-        return new AudioProcessingData.StreamProcessingData(gain, pan);
+        return new AudioProcessingData.StreamProcessingData(muted, gain, pan);
     }
 
 

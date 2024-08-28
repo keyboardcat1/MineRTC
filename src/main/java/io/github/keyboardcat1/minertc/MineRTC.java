@@ -18,6 +18,8 @@ import java.util.UUID;
 
 import static io.github.keyboardcat1.minertc.audio.AudioProcessingDataGenerator.playerToAudioProcessingData;
 
+// TODO: Settings for threshold&gain
+
 public class MineRTC extends JavaPlugin implements Listener {
 
     private static MineRTC instance;
