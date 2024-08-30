@@ -1,8 +1,3 @@
-import org.gradle.process.internal.ExecException
-import java.util.*
-
-var osName: String = System.getProperty("os.name").lowercase(Locale.getDefault())
-
 plugins {
     id("java")
 }

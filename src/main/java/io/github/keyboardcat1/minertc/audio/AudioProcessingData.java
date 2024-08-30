@@ -31,7 +31,7 @@ public class AudioProcessingData extends HashMap<UUID, AudioProcessingData.Strea
      * @param gain The gain factor, ranging from 0 to 1
      * @param pan The pan factor, randing from -1 to 1
      */
-    public record StreamProcessingData(byte muted, float gain, float pan) {
+    public record StreamProcessingData(byte enabled, float gain, float pan) {
         /**
          * The total size in bytes of all of this object's fields
          */
@@ -45,7 +45,7 @@ public class AudioProcessingData extends HashMap<UUID, AudioProcessingData.Strea
             ByteBuffer out = ByteBuffer.allocate(BYTES);
             out.putFloat(this.gain);
             out.putFloat(this.pan);
-            out.put(this.muted);
+            out.put(this.enabled);
             return out;
         }
 

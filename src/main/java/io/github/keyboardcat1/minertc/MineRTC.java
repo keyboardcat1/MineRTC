@@ -63,12 +63,11 @@ public class MineRTC extends JavaPlugin implements Listener {
         UUID uuid = event.getPlayer().getUniqueId();
 
         if (MCListener.sessions.get(uuid) != null) {
-            MCListener.sessions.get(uuid).close();
+            MCListener.sessions.get(uuid).close(1008, "Disconnected from MineCraft.");
             MCListener.sessions.remove(uuid);
         }
-
         if (RTCListener.sessions.get(uuid) != null) {
-            RTCListener.sessions.get(uuid).close();
+            RTCListener.sessions.get(uuid).close(1008, "Disconnected from MineCraft.");
             RTCListener.sessions.remove(uuid);
         }
     }

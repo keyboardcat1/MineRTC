@@ -44,11 +44,11 @@ public class AudioProcessingDataGenerator {
         double distance = main.getLocation().distance(other.getLocation());
         double deltaTheta = theta - Math.toRadians(main.getLocation().getYaw());
 
-        byte muted = (byte)(distance>THRESHOLD ? 1 : 0);
+        byte enabled = (byte)(distance>THRESHOLD ? 1 : 0);
         float gain = (float)(1 / (distance + 1));
         float pan = (float) Math.sin(deltaTheta);
 
-        return new AudioProcessingData.StreamProcessingData(muted, gain, pan);
+        return new AudioProcessingData.StreamProcessingData(enabled, gain, pan);
     }
 
 

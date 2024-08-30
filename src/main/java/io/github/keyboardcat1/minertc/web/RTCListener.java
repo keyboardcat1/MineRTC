@@ -18,15 +18,13 @@ import java.util.UUID;
  * A WebSocket endpoint acting as an WebRTC signaling server by relaying sent data to every connected session
  */
 public class RTCListener implements WebSocketListener {
-    private Session session;
     private UUID uuid;
     public static final HashMap<UUID, Session> sessions = new HashMap<>();
+
     @Override
     public void onWebSocketConnect(Session session) {
-        this.session = session;
-
         if (session.getUpgradeRequest().getParameterMap().get("u") == null || session.getUpgradeRequest().getParameterMap().get("t") == null)
-            session.close();
+            session.close(1008, "Unauthorized.");
         uuid = UUID.fromString(session.getUpgradeRequest().getParameterMap().get("u").get(0));
         String token = session.getUpgradeRequest().getParameterMap().get("t").get(0);
 
@@ -34,12 +32,12 @@ public class RTCListener implements WebSocketListener {
         if (Bukkit.getPlayer(uuid) != null && TokenManager.login(uuid, token)) {
             //allow a player to only be connected once
             if (sessions.get(uuid) != null) {
-                sessions.get(uuid).close();
+                sessions.get(uuid).close(1001, "Connected from another client.");
             }
             sessions.put(uuid, session);
             session.setIdleTimeout(Duration.ZERO);
         } else {
-            session.close();
+            session.close(1008, "Unauthorized.");
         }
 
     }

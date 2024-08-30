@@ -1,20 +1,43 @@
-@media (prefers-color-scheme: light) {
-    body {
-        background-color: white;
-        color: black;
-    }
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-    body {
-        background-color: black;
-        color: white;
-    }
+body {
+    background-color: black;
+    color: white;
+    font-family: 'Courier New', Courier, monospace;
 }
 
-@media (prefers-colors-scheme: no-preference) {
-    body {
-        background-color: black;
-        color: white;
-    }
+#wrapper {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
+#status {
+    text-align: center;
+    font-weight: bold;
+    font-size: 7rem;
+    color: yellow;
+}
+
+#audios {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+}
+
+/*
+#audios>div.box {
+    margin: 50px;
+    height: 50rem;
+    width: 50rem;
+    background-color: #ffffff;
+    border-radius: 50%;
+    display: inline-block;
+} */

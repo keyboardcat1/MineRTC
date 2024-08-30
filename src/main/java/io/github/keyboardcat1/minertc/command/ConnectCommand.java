@@ -3,6 +3,7 @@ package io.github.keyboardcat1.minertc.command;
 import io.github.keyboardcat1.minertc.MineRTC;
 import io.github.keyboardcat1.minertc.TokenManager;
 import io.github.keyboardcat1.minertc.web.MCListener;
+import io.github.keyboardcat1.minertc.web.RTCListener;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -43,7 +44,14 @@ public class ConnectCommand implements CommandExecutor {
             player.sendMessage(parsed);
             TokenManager.register(uuid, token);
 
-            MCListener.sessions.remove(uuid);
+            if (MCListener.sessions.get(uuid) != null) {
+                MCListener.sessions.get(uuid).close(1008, "Re-issued \"/connect\".");
+                MCListener.sessions.remove(uuid);
+            }
+            if (RTCListener.sessions.get(uuid) != null) {
+                RTCListener.sessions.get(uuid).close(1008, "Re-issued \"/connect\".");
+                RTCListener.sessions.remove(uuid);
+            }
         }
 
         return true;
