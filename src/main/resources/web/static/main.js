@@ -1,240 +1,225 @@
 const { Uuid } = require('uuid-tool');
 
-let parsedUrl = new URL(window.location.href);
-if (!(parsedUrl.searchParams.get('u') && parsedUrl.searchParams.get('t'))) {
-    throw Error('Missing parameters \'u\' or \'t\' in URL');
-}
 
+const RTC_CONFIG = {
+  iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+};
+
+
+const parsedUrl = new URL(window.location.href);
+if (!(parsedUrl.searchParams.get('u') && parsedUrl.searchParams.get('t'))) {
+  throw Error('Missing parameters \'u\' or \'t\' in URL.');
+}
 const localUuid = parsedUrl.searchParams.get('u');
 
-const MC_URL = `wss://${parsedUrl.host}/ws/mc${parsedUrl.search}`;
-const RTC_URL = `wss://${parsedUrl.host}/ws/rtc${parsedUrl.search}`;
-const ICE_SERVERS = [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun.l.google.com:5349" },
-    { urls: "stun:stun1.l.google.com:3478" },
-];
 
-const streams = {};
+const peers = {};
 
 let localStream;
 navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-    .then(stream => { localStream = stream; init() });
-
-
-const MCSocket = new WebSocket(MC_URL);
-const RTCSocket = new WebSocket(RTC_URL);
+  .then(stream => {
+    localStream = stream;
+    init();
+  })
+  .catch(err => {
+    console.log(err);
+  });
 
 // initiate WebSockets
+let MCSocket, RTCSocket;
 function init() {
-    MCSocket.addEventListener('open', handleOpen);
-    MCSocket.addEventListener('message', handleMC);
-    MCSocket.addEventListener('close', handleClose);
+  const MC_URL = `wss://${parsedUrl.host}/ws/mc${parsedUrl.search}`;
+  const RTC_URL = `wss://${parsedUrl.host}/ws/rtc${parsedUrl.search}`;
 
-    RTCSocket.addEventListener('open', handleOpen);
-    RTCSocket.addEventListener('message', handleRTC);
-    RTCSocket.addEventListener('close', handleClose);
+  MCSocket = new WebSocket(MC_URL);
+  MCSocket.onmessage = handleMC;
+  MCSocket.onclose = ({ code, reason }) => { console.log(`/mc closed: ${code} ${reason}`); closePeers(); };
+
+  RTCSocket = new WebSocket(RTC_URL);
+  RTCSocket.onmessage = handleRTC;
+  RTCSocket.onclose = ({ code, reason }) => { console.log(`/rtc closed: ${code} ${reason}`), closePeers(); };
 }
 
+window.addEventListener("beforeunload", closePeers);
 
 // === WEBSOCKET HANDLERS ===
 // handle AudioProcessingData binary messages
 async function handleMC(ev) {
-    const audioData = await audioDataFromBytes(ev.data);
-    for (const uuid in audioData) {
-        let stream = streams[uuid];
-        if (stream)
-            stream.process(audioData[uuid]);
-        else
-            streams[uuid] = new Stream(uuid);
-    }
+  const audioData = await audioDataFromBytes(ev.data);
+  console.log(audioData);
+  for (const uuid in audioData) {
+    let peer = peers[uuid];
+    if (peer)
+      peer.process(audioData[uuid]);
+    else
+      peers[uuid] = new Peer(uuid);
+  }
 }
 
 // handle RTC signalling messages
-function handleRTC(ev) {
-    const signal = JSON.parse(ev.data);
-    const data = signal.data;
-
-    if (!(signal.from in streams)) {
-        if (data.type == 'offer') {
-            streams[signal.from] = new Stream(signal.from);
-        } else {
-            return;
-        }
-    }
-    const connection = streams[signal.from].connection;
-
-    switch (data.type) {
-        case 'offer':
-            console.log(data);
-            connection.setRemoteDescription(data.body);
-            connection.createAnswer().then(answer => {
-                let response = { type: 'answer', body: answer };
-                send(signal.from, response);
-            });
-            break;
-        case 'answer':
-            connection.setRemoteDescription(data.body);
-            break;
-        case 'candidate':
-            connection.addIceCandidate(data.body);
-            break;
-    }
+async function handleRTC(ev) {
+  let { from, data } = JSON.parse(ev.data);
+  if (!(from in peers))
+    peers[from] = new Peer(from);
+  await peers[from].handleSignal(data);
 }
-
-// handle open
-let opens = 0;
-function handleOpen(ev) {
-    opens++;
-    if (opens == 2) statusConnected();
-}
-
-// handle close
-function handleClose(ev) {
-    statusDisconnected();
-    console.log(`WebSocket Error: ${ev.code} ${ev.reason}`);
-}
-
-
-// === WEBRTC UTILITIES ===
-// connect to specified uuid and configure connection
-function connect(to) {
-    const config = { iceServers: ICE_SERVERS };
-    const connection = new RTCPeerConnection(config);
-    connection.addEventListener('icecandidate', ev => {
-        let response = { type: 'candidate', body: ev.candidate };
-        send(to, response);
-    });
-
-    if (localUuid > to) {
-        connection.createOffer().then(offer => {
-            connection.setLocalDescription(offer);
-            let response = { type: 'offer', body: offer };
-            send(to, response);
-        });
-    }
-
-    return connection;
-}
-
-// RTCSocket.send() "to uuid" utility
-function send(to, data) {
-    RTCSocket.send(JSON.stringify({ to, data }));
-}
-
 
 // === STREAM UTILITY CLASS ===
 const AUDIOS_DIV = '#audios';
-// MediaStream coupled with a connection, an audio HTML element and audio processing
-class Stream extends MediaStream {
+class Peer extends MediaStream {
 
-    // uuid: peer's uuid
-    constructor(uuid) {
-        super();
+  // uuid: peer's uuid
+  constructor(uuid) {
+    super();
 
-        this.uuid = uuid;
+    this.uuid = uuid;
 
-        this.element = document.createElement('audio');
-        this.element.id = this.uuid;
+    // audio element
+    this.element = document.createElement('audio');
+    this.element.id = this.uuid;
+    document.querySelector(AUDIOS_DIV).appendChild(this.element);
+
+    // processing nodes
+    this.audioContext = new AudioContext();
+    this.gainNode = this.audioContext.createGain();
+    this.stereoPannerNode = this.audioContext.createStereoPanner();
+
+    // peer connection
+    this.makingOffer = false;
+    this.ignoreOffer = false;
+    this.pc = new RTCPeerConnection(RTC_CONFIG);
+    for (const track of localStream.getTracks()) {
+      this.pc.addTrack(track, localStream);
+    }
+    this.pc.ontrack = ({ track, streams }) => {
+      track.onunmute = () => {
+        if (this.element.srcObject) return;
+        this.addTrack(track);
+        const source = this.audioContext.createMediaStreamSource(this);
+        source.connect(this.gainNode);
+        source.connect(this.stereoPannerNode);
+        this.gainNode.connect(this.audioContext.destination);
+        this.stereoPannerNode.connect(this.audioContext.destination);
         this.element.srcObject = this;
-        document.querySelector(AUDIOS_DIV).appendChild(this.element);
+      };
+    };
+    this.pc.onnegotiationneeded = async () => {
+      try {
+        this.makingOffer = true;
+        await this.pc.setLocalDescription();
+        this.send({ description: this.pc.localDescription });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        this.makingOffer = false;
+      }
+    };
+    this.pc.onicecandidate = ({ candidate }) => this.send({ candidate });
+    this.pc.onconnectionstatechange = () => {
+      if (this.pc.connectionState in ['closed', 'failed'])
+        this.close()
+    };
 
-        this.audioContext = new AudioContext();
-        this.gainNode = this.audioContext.createGain();
-        this.stereoPannerNode = this.audioContext.createStereoPanner();
+  }
 
-        this.connection = connect(this.uuid);
-        this.connection.addTrack(localStream.getAudioTracks()[0]);
-        this.connection.addEventListener('track', ev => {
-            this.addTrack(ev.track);
-            const source = this.audioContext.createMediaStreamSource(this);
-            source.connect(this.gainNode);
-            source.connect(this.stereoPannerNode);
-            this.gainNode.connect(this.audioContext.destination);
-            this.stereoPannerNode.connect(this.audioContext.destination);
-        });
+  async handleSignal({ description, candidate }) {
+    try {
+      if (description) {
+        const offerCollision = description.type === "offer" && (this.makingOffer || this.pc.signalingState !== "stable");
+        const polite = localUuid > this.uuid;
+        this.ignoreOffer = !polite && offerCollision;
+        if (this.ignoreOffer) {
+          return;
+        }
 
-        this.connection.addEventListener('connectionstatechange', ev => {
-            if (this.connection.connectionState == 'closed')
-                this.close();
-        });
+        await this.pc.setRemoteDescription(description);
+        if (description.type === "offer") {
+          await this.pc.setLocalDescription();
+          this.send({ description: this.pc.localDescription });
+        }
+      } else if (candidate) {
+        try {
+          await this.pc.addIceCandidate(candidate);
+        } catch (err) {
+          if (!this.ignoreOffer) {
+            throw err;
+          }
+        }
+      }
+    } catch (err) {
+      console.error(err);
     }
+  }
 
-    // process using StreamProcessingData
-    process(data) {
-        this.gainNode.gain.setValueAtTime(data.gain, this.audioContext.currentTime);
-        this.stereoPannerNode.pan.setValueAtTime(data.pan, this.audioContext.currentTime);
-        this.getAudioTracks()[0].enabled = data.enabled;
-    }
+  send(data) {
+    RTCSocket.send(JSON.stringify({ to: this.uuid, data }));
+  }
 
-    // handle close event
-    close() {
-        this.connection.close();
-        this.element.remove();
-        delete streams[this.uuid];
-    }
+  // process using StreamProcessingData
+  process(audioData) {
+    if (!this.getAudioTracks()[0]) return;
+    this.gainNode.gain.setValueAtTime(audioData.gain, this.audioContext.currentTime);
+    this.stereoPannerNode.pan.setValueAtTime(audioData.pan, this.audioContext.currentTime);
+    this.getAudioTracks()[0].enabled = audioData.enabled;
+  }
+
+  close() {
+    this.pc.close();
+    this.element.remove();
+    delete peers[this.uuid];
+  }
+}
+
+function closePeers() {
+  for (const uuid in peers)
+    peers[uuid].close()
 }
 
 
 // === PARSERS === 
 // parse binary AudioProcessingData to JSON
 function audioDataFromBytes(data) {
-    const reader = new FileReader();
-    reader.readAsArrayBuffer(data);
-    return new Promise(resolve => reader.addEventListener('loadend', () => {
-        let data = {};
-        const BYTES = 25;
-        let parsedData = new Uint8Array(reader.result);
-        for (let i = 0; i < parsedData.length; i += BYTES) {
-            let uuid = new Uuid();
-            uuid.fromBytes(Array.from(parsedData.slice(i, i + 16)));
-            let gain = toFloat((parsedData[i + 16] << 8 * 3) + (parsedData[i + 17] << 8 * 2) + (parsedData[i + 18] << 8 * 1) + (parsedData[i + 19] << 8 * 0));
-            let pan = toFloat((parsedData[i + 20] << 8 * 3) + (parsedData[i + 21] << 8 * 2) + (parsedData[i + 22] << 8 * 1) + (parsedData[i + 23] << 8 * 0));
-            let enabled = parsedData[i + 24] == 1;
-            data[uuid.toString()] = { gain, pan, enabled };
-        }
-        resolve(data);
-    }));
+  const reader = new FileReader();
+  reader.readAsArrayBuffer(data);
+  return new Promise(resolve => reader.addEventListener('loadend', () => {
+    let data = {};
+    const BYTES = 25;
+    let parsedData = new Uint8Array(reader.result);
+    for (let i = 0; i < parsedData.length; i += BYTES) {
+      let uuid = new Uuid();
+      uuid.fromBytes(Array.from(parsedData.slice(i, i + 16)));
+      let gain = toFloat((parsedData[i + 16] << 8 * 3) + (parsedData[i + 17] << 8 * 2) + (parsedData[i + 18] << 8 * 1) + (parsedData[i + 19] << 8 * 0));
+      let pan = toFloat((parsedData[i + 20] << 8 * 3) + (parsedData[i + 21] << 8 * 2) + (parsedData[i + 22] << 8 * 1) + (parsedData[i + 23] << 8 * 0));
+      let enabled = parsedData[i + 24] == 1;
+      data[uuid.toString()] = { gain, pan, enabled };
+    }
+    resolve(data);
+  }));
 }
 
 // bytes of uint32 to float32
 function toFloat(n) {
-    n = +n;
-    let res;
-    let mts = n & 0x007fffff;
-    let sgn = (n & 0x80000000) ? -1 : 1;
-    let exp = (n & 0x7f800000) >>> 23;
-    function mantissa(mts) {
-        let bit = 0x00400000;
-        while (mts && bit) {
-            mts /= 2;
-            bit >>>= 1;
-        }
-        return mts;
+  n = +n;
+  let res;
+  let mts = n & 0x007fffff;
+  let sgn = (n & 0x80000000) ? -1 : 1;
+  let exp = (n & 0x7f800000) >>> 23;
+  function mantissa(mts) {
+    let bit = 0x00400000;
+    while (mts && bit) {
+      mts /= 2;
+      bit >>>= 1;
     }
-    if (exp === 0xff) {
-        res = mts ? NaN : sgn * Infinity;
-    } else if (exp) {
-        res = sgn * ((1 + mantissa(mts)) * Math.pow(2, exp - 127));
-    } else if (mts) {
-        res = sgn * (mantissa(mts) * Math.pow(2, -126));
-    } else {
-        res = (sgn > 0) ? 0 : -0;
-    }
-    return res;
-}
-
-
-// === UI ===
-// #status "Connected."
-function statusConnected() {
-    const element = document.getElementById('status');
-    element.textContent = 'Connected.';
-    element.style.color = 'limegreen';
-}
-// #status "Disconnected."
-function statusDisconnected() {
-    const element = document.getElementById('status');
-    element.textContent = 'Disonnected.';
-    element.style.color = 'red';
+    return mts;
+  }
+  if (exp === 0xff) {
+    res = mts ? NaN : sgn * Infinity;
+  } else if (exp) {
+    res = sgn * ((1 + mantissa(mts)) * Math.pow(2, exp - 127));
+  } else if (mts) {
+    res = sgn * (mantissa(mts) * Math.pow(2, -126));
+  } else {
+    res = (sgn > 0) ? 0 : -0;
+  }
+  return res;
 }
