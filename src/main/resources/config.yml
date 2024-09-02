@@ -2,3 +2,5 @@ ip: "your.ip"
 port: 8809
 
 connect-message: "Click to connect:"
+
+max-voice-distance: 50
