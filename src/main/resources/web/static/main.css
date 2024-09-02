@@ -1,43 +1,66 @@
 html,
 body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-    background-color: black;
-    color: white;
-    font-family: 'Courier New', Courier, monospace;
+  background-color: black;
+  color: white;
+  font-family: 'Courier New', Courier, monospace;
 }
 
 #wrapper {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  height: 100%;
+  padding: 0% 10% 0% 10%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-#status {
-    text-align: center;
-    font-weight: bold;
-    font-size: 7rem;
-    color: yellow;
+#info {
+  width: 100%;
+  display: none;
 }
 
-#audios {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
+#ws-text {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  margin: 100px 0 100px 0;
 }
 
-/*
-#audios>div.box {
-    margin: 50px;
-    height: 50rem;
-    width: 50rem;
-    background-color: #ffffff;
-    border-radius: 50%;
-    display: inline-block;
-} */
+#ws-text>span {
+  width: 50%;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+
+#ws-state {
+  color: yellow;
+}
+
+table,
+th,
+td {
+  border: 1px solid whitesmoke;
+  border-collapse: collapse;
+}
+
+table {
+  width: 100%;
+  margin: 20px 0 20px 0;
+  text-align: center;
+}
+
+td,
+th {
+  padding: 10px;
+  overflow-wrap: break-word;
+}
+
+.td-uuid {
+  width: 70%;
+}

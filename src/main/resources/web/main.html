@@ -2,23 +2,42 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="static/main.css">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/main.css">
+  <title>MineRTC</title>
+
+  <style>
+
+  </style>
 </head>
 
 <body>
-    <div id="wrapper">
-        <h1 id="status">Connecting...</h1>
 
-        <div id="audios">
-        </div>
+
+  <div id="wrapper">
+
+    <h1 id="input-text">Allow audio input.</h1>
+    <div id="info">
+      <h3 id="ws-text"><span>WS state:</span> <span id="ws-state">connecting</span></h3>
+      <table>
+        <thead>
+          <tr>
+            <th class="td-uuid">UUID</th>
+            <th class="td-uuid">state</th>
+          </tr>
+        </thead>
+        <tbody id="peers">
+        </tbody>
+      </table>
     </div>
+  </div>
 
-    <script src="static/uuid-tool.js"></script>
-    <script src="static/main.js"></script>
+  <div id="audios"></div>
+
+  <script src="/static/uuid-tool.js"></script>
+  <script src="/static/main.js"></script>
 </body>
 
 </html>

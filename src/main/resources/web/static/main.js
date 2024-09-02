@@ -20,6 +20,8 @@ navigator.mediaDevices.getUserMedia({ audio: true, video: false })
   .then(stream => {
     localStream = stream;
     init();
+    UI_hideInputText();
+    UI_unhideInfo();
   })
   .catch(err => {
     console.log(err);
@@ -33,11 +35,15 @@ function init() {
 
   MCSocket = new WebSocket(MC_URL);
   MCSocket.onmessage = handleMC;
-  MCSocket.onclose = ({ code, reason }) => { console.log(`/mc closed: ${code} ${reason}`); closePeers(); };
+  MCSocket.onclose = ({ code, reason }) => { console.log(`/mc closed: ${code} ${reason}`); closePeers() };
+
 
   RTCSocket = new WebSocket(RTC_URL);
   RTCSocket.onmessage = handleRTC;
-  RTCSocket.onclose = ({ code, reason }) => { console.log(`/rtc closed: ${code} ${reason}`), closePeers(); };
+  RTCSocket.onclose = ({ code, reason }) => { console.log(`/rtc closed: ${code} ${reason}`); closePeers() };
+
+  MCSocket.addEventListener('open', () => UI_setWsState('connected'));
+  MCSocket.addEventListener('close', ({ code, reason }) => UI_setWsState(`closed: ${code} ${reason}`))
 }
 
 window.addEventListener("beforeunload", closePeers);
@@ -47,6 +53,10 @@ window.addEventListener("beforeunload", closePeers);
 async function handleMC(ev) {
   const audioData = await audioDataFromBytes(ev.data);
   console.log(audioData);
+  for (const uuid in peers) {
+    if (!(uuid in audioData))
+      peers[uuid].close();
+  }
   for (const uuid in audioData) {
     let peer = peers[uuid];
     if (peer)
@@ -76,7 +86,6 @@ class Peer extends MediaStream {
 
     // audio element
     this.element = document.createElement('audio');
-    this.element.id = this.uuid;
     document.querySelector(AUDIOS_DIV).appendChild(this.element);
 
     // processing nodes
@@ -116,10 +125,13 @@ class Peer extends MediaStream {
     };
     this.pc.onicecandidate = ({ candidate }) => this.send({ candidate });
     this.pc.onconnectionstatechange = () => {
+
       if (this.pc.connectionState in ['closed', 'failed'])
         this.close()
     };
 
+    UI_addTr(this.uuid);
+    this.pc.addEventListener('connectionstatechange', () => UI_setTr(this.uuid, this.pc.connectionState));
   }
 
   async handleSignal({ description, candidate }) {
@@ -167,6 +179,7 @@ class Peer extends MediaStream {
     this.pc.close();
     this.element.remove();
     delete peers[this.uuid];
+    UI_removeTr(this.uuid);
   }
 }
 
@@ -223,3 +236,45 @@ function toFloat(n) {
   }
   return res;
 }
+
+// === UI ===
+function UI_hideInputText() {
+  let e = document.querySelector('#input-text');
+  e.style['display'] = 'none';
+}
+function UI_unhideInfo() {
+  let e = document.querySelector('#info');
+  e.style['display'] = 'block';
+}
+function UI_setWsState(text) {
+  let e = document.querySelector('#ws-state');
+  e.textContent = text;
+  if (text.includes('connected')) e.style['color'] = 'limegreen';
+  else if (text.includes('closed')) e.style['color'] = 'red';
+}
+function UI_addTr(uuid) {
+  let tr = document.createElement('tr');
+  tr.id = uuid;
+  for (let className of ['td-uuid', 'td-state']) {
+    let td = document.createElement('td');
+    td.classList.add(className);
+    if (className === 'td-uuid') td.textContent = uuid;
+    tr.append(td);
+  }
+  let table = document.querySelector('#peers');
+  table.appendChild(tr);
+}
+function UI_setTr(uuid, state) {
+  let tr = document.getElementById(uuid);
+  let td_state = tr.querySelector('.td-state');
+  td_state.textContent = state;
+  if (state === 'connected') td_state.style['color'] = 'limegreen';
+  else if (state in ['new', 'connecting']) td_state.style['color'] = 'yellow';
+  else td_state.style['color'] = 'red'
+}
+function UI_removeTr(uuid) {
+  document.getElementById(uuid).remove();
+}
+
+
+
