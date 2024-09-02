@@ -9,7 +9,7 @@ import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerI
 
 import java.io.InputStream;
 import java.security.KeyStore;
-
+import java.util.UUID;
 
 
 /**
@@ -61,9 +61,33 @@ public class AppServer {
 
 
 
-        connector.setPort(MineRTC.getInstance().getPort());
+        connector.setPort(MineRTC.getInstance().getConfig().getInt("port"));
         server.addConnector(connector);
         server.setHandler(servletContextHandler);
         server.start();
+    }
+
+    /**
+     * Closes both WS sessions for a specified player
+     * @param uuid the player's UUID
+     * @param code response code
+     * @param reason response reason
+     */
+    public static void closeWSSessionsFor(UUID uuid, int code, String reason) {
+        if (MCListener.sessions.get(uuid) != null) {
+            MCListener.sessions.get(uuid).close(code, reason);
+            MCListener.sessions.remove(uuid);
+        }
+        if (RTCListener.sessions.get(uuid) != null) {
+            RTCListener.sessions.get(uuid).close(code, reason);
+            RTCListener.sessions.remove(uuid);
+        }
+    }
+
+    // returns the complete url
+    public static String getURL() {
+        String ip =  MineRTC.getInstance().getConfig().getString("ip");
+        int port = MineRTC.getInstance().getConfig().getInt("port");
+        return "https://" + ip + (port == 443 ? "" : ":" + port);
     }
 }

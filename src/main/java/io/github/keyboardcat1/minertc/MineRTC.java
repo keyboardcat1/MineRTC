@@ -3,7 +3,6 @@ package io.github.keyboardcat1.minertc;
 import io.github.keyboardcat1.minertc.command.ConnectCommand;
 import io.github.keyboardcat1.minertc.web.AppServer;
 import io.github.keyboardcat1.minertc.web.MCListener;
-import io.github.keyboardcat1.minertc.web.RTCListener;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -62,14 +61,7 @@ public class MineRTC extends JavaPlugin implements Listener {
         //disconnect player from sockets on quit
         UUID uuid = event.getPlayer().getUniqueId();
 
-        if (MCListener.sessions.get(uuid) != null) {
-            MCListener.sessions.get(uuid).close(1008, "Disconnected from MineCraft.");
-            MCListener.sessions.remove(uuid);
-        }
-        if (RTCListener.sessions.get(uuid) != null) {
-            RTCListener.sessions.get(uuid).close(1008, "Disconnected from MineCraft.");
-            RTCListener.sessions.remove(uuid);
-        }
+        AppServer.closeWSSessionsFor(uuid, 1008, "Disconnected from MineCraft.");
     }
 
 
@@ -86,25 +78,4 @@ public class MineRTC extends JavaPlugin implements Listener {
             }
         });
     }
-
-    // returns the port from the config
-    public int getPort() {
-        return getConfig().getInt("port");
-    }
-
-    // returns the ip from the config
-    public String getIp() {
-        return getConfig().getString("ip");
-    }
-
-    // returns the connect message
-    public String getConnectMessage() {
-        return getConfig().getString("connect-message");
-    }
-
-    // returns the complete url
-    public String getURL() {
-        return "https://" + getIp() + (getPort() == 443 ? "" : ":" + getPort());
-    }
-
 }

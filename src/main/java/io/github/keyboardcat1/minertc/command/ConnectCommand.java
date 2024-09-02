@@ -2,8 +2,7 @@ package io.github.keyboardcat1.minertc.command;
 
 import io.github.keyboardcat1.minertc.MineRTC;
 import io.github.keyboardcat1.minertc.TokenManager;
-import io.github.keyboardcat1.minertc.web.MCListener;
-import io.github.keyboardcat1.minertc.web.RTCListener;
+import io.github.keyboardcat1.minertc.web.AppServer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -38,20 +37,16 @@ public class ConnectCommand implements CommandExecutor {
             String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
 
             MiniMessage mn = MiniMessage.miniMessage();
-            String url = MineRTC.getInstance().getURL() + "/?u=" + uuid + "&t=" + encodedToken;
-            Component parsed = mn.deserialize(MineRTC.getInstance().getConnectMessage() + button, Placeholder.parsed("connect-link", url));
+            String url = AppServer.getURL() + "/?u=" + uuid + "&t=" + encodedToken;
+            Component parsed = mn.deserialize(
+                    MineRTC.getInstance().getConfig().getString("connect-message") + button,
+                    Placeholder.parsed("connect-link", url)
+            );
 
             player.sendMessage(parsed);
             TokenManager.register(uuid, token);
 
-            if (MCListener.sessions.get(uuid) != null) {
-                MCListener.sessions.get(uuid).close(1008, "Re-issued \"/connect\".");
-                MCListener.sessions.remove(uuid);
-            }
-            if (RTCListener.sessions.get(uuid) != null) {
-                RTCListener.sessions.get(uuid).close(1008, "Re-issued \"/connect\".");
-                RTCListener.sessions.remove(uuid);
-            }
+            AppServer.closeWSSessionsFor(uuid, 1008, "Re-issued \"/connect\".");
         }
 
         return true;

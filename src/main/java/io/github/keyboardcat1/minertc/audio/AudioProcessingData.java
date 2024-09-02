@@ -35,7 +35,7 @@ public class AudioProcessingData extends HashMap<UUID, AudioProcessingData.Strea
         /**
          * The total size in bytes of all of this object's fields
          */
-        public static int BYTES = Float.BYTES + Float.BYTES + Byte.BYTES;
+        public static final int BYTES = Float.BYTES + Float.BYTES + Byte.BYTES;
 
         /**
          * Converts this object into bytes

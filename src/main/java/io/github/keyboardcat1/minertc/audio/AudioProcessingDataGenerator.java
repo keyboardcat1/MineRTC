@@ -1,5 +1,6 @@
 package io.github.keyboardcat1.minertc.audio;
 
+import io.github.keyboardcat1.minertc.MineRTC;
 import io.github.keyboardcat1.minertc.web.MCListener;
 import io.github.keyboardcat1.minertc.web.RTCListener;
 import org.bukkit.Bukkit;
@@ -9,7 +10,7 @@ import org.bukkit.entity.Player;
  * A class to provide players with {@link AudioProcessingData} based on their relative positions
  */
 public class AudioProcessingDataGenerator {
-    public static final int THRESHOLD = 50;
+    public static final int MAX_VOICE_DISTANCE = MineRTC.getInstance().getConfig().getInt("max-voice-distance");
 
     /**
      * Generates {@link AudioProcessingData} for a given player.
@@ -25,7 +26,7 @@ public class AudioProcessingDataGenerator {
                 return;
             // if (player.getLocation().distance(other.getLocation()) > THRESHOLD) return;
 
-            out.put(other.getUniqueId(), playersToChannelProcessingData(player, other));
+            out.put(other.getUniqueId(), playersToStreamProcessingData(player, other));
         });
         return out;
     }
@@ -36,7 +37,7 @@ public class AudioProcessingDataGenerator {
      * @param other One of the players providing the incoming audio for the main player
      * @return Processing data encoding the other's players position relative to the main player
      */
-    protected static AudioProcessingData.StreamProcessingData playersToChannelProcessingData(Player main, Player other) {
+    protected static AudioProcessingData.StreamProcessingData playersToStreamProcessingData(Player main, Player other) {
         double deltaX = other.getLocation().getX() - main.getLocation().getX();
         double deltaY = other.getLocation().getY() - main.getLocation().getY();
         double theta = Math.atan2(deltaY, deltaX);
@@ -44,8 +45,8 @@ public class AudioProcessingDataGenerator {
         double distance = main.getLocation().distance(other.getLocation());
         double deltaTheta = theta - Math.toRadians(main.getLocation().getYaw());
 
-        byte enabled = (byte)(distance>THRESHOLD ? 1 : 0);
-        float gain = (float)(1 / (distance + 1));
+        byte enabled = (byte)(distance<MAX_VOICE_DISTANCE-1 ? 1 : 0);
+        float gain = (float)(-1F/MAX_VOICE_DISTANCE*distance + 1);
         float pan = (float) Math.sin(deltaTheta);
 
         return new AudioProcessingData.StreamProcessingData(enabled, gain, pan);
