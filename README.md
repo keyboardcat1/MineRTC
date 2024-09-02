@@ -1,6 +1,11 @@
 # MineRTC
 
-The easiest minecraft proximity chat plugin to use
+The easiest minecraft proximity chat plugin to use.
+
+## Description
+
+MineRTC allows for Vanilla clients to talk to each other through proximity chat using their browsers.
+This is done through WebRTC connections and WebSockets.
 
 ## Usage
 ### Server
@@ -22,3 +27,11 @@ The plugin jar will be in `build/libs`
 
 #### Build dependencies
 - node 
+
+## How it works
+
+![MineRTC diagram](diagram.png "Functional diagram")
+
+
+
+
