@@ -76,13 +76,12 @@ async function handleRTC(ev) {
 
 // === STREAM UTILITY CLASS ===
 const AUDIOS_DIV = '#audios';
-class Peer extends MediaStream {
+class Peer {
 
   // uuid: peer's uuid
   constructor(uuid) {
-    super();
-
     this.uuid = uuid;
+    this.receivedTrack = false;
 
     // audio element
     this.element = document.createElement('audio');
@@ -102,14 +101,12 @@ class Peer extends MediaStream {
     }
     this.pc.ontrack = ({ track, streams }) => {
       track.onunmute = () => {
-        if (this.element.srcObject) return;
-        this.addTrack(track);
-        const source = this.audioContext.createMediaStreamSource(this);
-        source.connect(this.gainNode);
-        source.connect(this.stereoPannerNode);
-        this.gainNode.connect(this.audioContext.destination);
+        if (this.receivedTrack) return;
+        else this.receivedTrack = true;
+        this.element.srcObject = streams[0];
+        this.audioContext.createMediaStreamSource(streams[0]).connect(this.gainNode);
+        this.gainNode.connect(this.stereoPannerNode);
         this.stereoPannerNode.connect(this.audioContext.destination);
-        this.element.srcObject = this;
       };
     };
     this.pc.onnegotiationneeded = async () => {
@@ -125,7 +122,6 @@ class Peer extends MediaStream {
     };
     this.pc.onicecandidate = ({ candidate }) => this.send({ candidate });
     this.pc.onconnectionstatechange = () => {
-
       if (this.pc.connectionState in ['closed', 'failed'])
         this.close()
     };
@@ -169,10 +165,10 @@ class Peer extends MediaStream {
 
   // process using StreamProcessingData
   process(audioData) {
-    if (!this.getAudioTracks()[0]) return;
-    this.gainNode.gain.setValueAtTime(audioData.gain, this.audioContext.currentTime);
-    this.stereoPannerNode.pan.setValueAtTime(audioData.pan, this.audioContext.currentTime);
-    this.getAudioTracks()[0].enabled = audioData.enabled;
+    if (!this.receivedTrack) return;
+    this.gainNode.gain.value = audioData.gain;
+    this.stereoPannerNode.pan.value = audioData.pan;
+    this.element.muted = audioData.enabled; // ****
   }
 
   close() {
@@ -201,13 +197,24 @@ function audioDataFromBytes(data) {
     for (let i = 0; i < parsedData.length; i += BYTES) {
       let uuid = new Uuid();
       uuid.fromBytes(Array.from(parsedData.slice(i, i + 16)));
-      let gain = toFloat((parsedData[i + 16] << 8 * 3) + (parsedData[i + 17] << 8 * 2) + (parsedData[i + 18] << 8 * 1) + (parsedData[i + 19] << 8 * 0));
-      let pan = toFloat((parsedData[i + 20] << 8 * 3) + (parsedData[i + 21] << 8 * 2) + (parsedData[i + 22] << 8 * 1) + (parsedData[i + 23] << 8 * 0));
-      let enabled = parsedData[i + 24] == 1;
+      let gain = toFloat(getBytes(parsedData, i+16, i+20));
+      let pan = toFloat(getBytes(parsedData, i+20, i+24));
+      let enabled = parsedData[i+24] == 1;
       data[uuid.toString()] = { gain, pan, enabled };
     }
     resolve(data);
   }));
+}
+
+// slice and add [first, last) bytes of Uint8Array, max 8 bytes
+function getBytes(data, first, last) {
+  let out = 0;
+  let bn = last-first;
+  for (let n=first; n<last; n++) {
+    out += data[n] << 8*(bn-1);
+    bn--;
+  }
+  return out;
 }
 
 // bytes of uint32 to float32

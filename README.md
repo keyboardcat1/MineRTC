@@ -34,7 +34,7 @@ hence triggering the SSL certificate warning.
 
 ## Building
 
-1. Run `./gradlew build` (Linux and MacOS) or `./gradlew.bat build` (Windows)
+1. Run `./gradlew build` (Linux and macOS) or `./gradlew.bat build` (Windows)
 2. The plugin jar will be in `build/libs`
 
 ## How it works
