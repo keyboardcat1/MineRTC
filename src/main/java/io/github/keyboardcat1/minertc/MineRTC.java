@@ -39,7 +39,11 @@ public class MineRTC extends JavaPlugin implements Listener {
 
         // start web server
         try {
+            String address =  MineRTC.getInstance().getConfig().getString("address");
+            if (Objects.equals(address, "your.address"))
+                getLogger().warning("CONFIGURE YOUR SERVER ADDRESS IN CONFIG!");
             AppServer.main(new String[0]);
+
         } catch (Exception e) {
             getLogger().severe("Web server failed to start");
             throw new RuntimeException(e);

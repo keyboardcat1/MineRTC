@@ -86,7 +86,7 @@ public class AppServer {
 
     // returns the complete url
     public static String getURL() {
-        String ip =  MineRTC.getInstance().getConfig().getString("ip");
+        String ip =  MineRTC.getInstance().getConfig().getString("address");
         int port = MineRTC.getInstance().getConfig().getInt("port");
         return "https://" + ip + (port == 443 ? "" : ":" + port);
     }

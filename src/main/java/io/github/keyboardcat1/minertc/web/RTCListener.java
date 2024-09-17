@@ -67,7 +67,7 @@ public class RTCListener implements WebSocketListener {
 
         } catch (ParseException ignored) {
         } catch (IOException e) {
-            MineRTC.getInstance().getLogger().severe("WS : Could not send string");
+            MineRTC.getInstance().getLogger().warning("WS : Could not send string");
         }
     }
 }

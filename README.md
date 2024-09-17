@@ -15,9 +15,10 @@ This plugin is compatible with Bukkit-based servers (Bukkit, Spigot, Paper).
 ### Server
 1. Place the latest jar in your plugins folder
 2. Start your Bukkit-based server
-3. Optional: configure proximity-chat and web in `plugins/MineRTC/config.yml`
+3. **Configure** your server IP and port in `plugins/MineRTC/config.yml`
+4. Re-start your server
 
-*Note: Using port 80 or 443 requires the server be started with root permissions.*
+*Note: Using port 443 (or 80) requires the server be started with root permissions.*
 
 ### In game
 
