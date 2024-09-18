@@ -90,7 +90,16 @@ class Peer {
     // processing nodes
     this.audioContext = new AudioContext();
     this.gainNode = this.audioContext.createGain();
-    this.stereoPannerNode = this.audioContext.createStereoPanner();
+    this.pannerNode = this.audioContext.createPanner();
+    // configuration
+    this.pannerNode.panningModel = "HRTF";
+    this.pannerNode.distanceModel = "linear";
+    this.pannerNode.refDistance = 1;
+    this.pannerNode.maxDistance = 50;
+    this.pannerNode.rolloffFactor = 1;
+    this.pannerNode.coneInnerAngle = 60;
+    this.pannerNode.coneOuterAngle = 90;
+    this.pannerNode.coneOuterGain = 0.3;
 
     // peer connection
     this.makingOffer = false;
@@ -105,8 +114,8 @@ class Peer {
         else this.receivedTrack = true;
         this.element.srcObject = streams[0];
         this.audioContext.createMediaStreamSource(streams[0]).connect(this.gainNode);
-        this.gainNode.connect(this.stereoPannerNode);
-        this.stereoPannerNode.connect(this.audioContext.destination);
+        this.gainNode.connect(this.pannerNode);
+        this.pannerNode.connect(this.audioContext.destination);
       };
     };
     this.pc.onnegotiationneeded = async () => {
@@ -165,10 +174,24 @@ class Peer {
 
   // process using StreamProcessingData
   process(audioData) {
+    let ct = this.audioContext.currentTime;
     if (!this.receivedTrack) return;
-    this.gainNode.gain.value = audioData.gain;
-    this.stereoPannerNode.pan.value = audioData.pan;
-    this.element.muted = audioData.enabled; // ****
+    this.gainNode.gain.setValueAtTime(audioData.enabled?1:0, ct);
+    if (!audioData.enabled) return;
+    let [upX, upY, upZ] = calculateUp([audioData.forwardX, audioData.forwardY, audioData.forwardZ]);
+    if (this.audioContext.listener.forwardX) {
+      this.audioContext.listener.forwardX.setValueAtTime(audioData.forwardX, ct);
+      this.audioContext.listener.forwardY.setValueAtTime(audioData.forwardY, ct);
+      this.audioContext.listener.forwardZ.setValueAtTime(audioData.forwardZ, ct);
+    } else {
+      this.audioContext.listener.setOrientation(audioData.forwardX, audioData.forwardY, audioData.forwardZ, 0, 1, 0);
+    }
+    this.pannerNode.positionX.setValueAtTime(audioData.positionX, ct);
+    this.pannerNode.positionY.setValueAtTime(audioData.positionY, ct);
+    this.pannerNode.positionZ.setValueAtTime(audioData.positionZ, ct);
+    this.pannerNode.orientationX.setValueAtTime(audioData.orientationX, ct);
+    this.pannerNode.orientationY.setValueAtTime(audioData.orientationY, ct);
+    this.pannerNode.orientationZ.setValueAtTime(audioData.orientationZ, ct);
   }
 
   close() {
@@ -184,30 +207,32 @@ function closePeers() {
     peers[uuid].close()
 }
 
-
-// === PARSERS === 
+// === CODEC === 
 // parse binary AudioProcessingData to JSON
 function audioDataFromBytes(data) {
   const reader = new FileReader();
   reader.readAsArrayBuffer(data);
   return new Promise(resolve => reader.addEventListener('loadend', () => {
     let data = {};
-    const BYTES = 25;
+    const BYTES = 16 + 9*4 + 1;
     let parsedData = new Uint8Array(reader.result);
     for (let i = 0; i < parsedData.length; i += BYTES) {
       let uuid = new Uuid();
       uuid.fromBytes(Array.from(parsedData.slice(i, i + 16)));
-      let gain = toFloat(getBytes(parsedData, i+16, i+20));
-      let pan = toFloat(getBytes(parsedData, i+20, i+24));
-      let enabled = parsedData[i+24] == 1;
-      data[uuid.toString()] = { gain, pan, enabled };
+      const bFloat = (f) => toFloat(sumBytes(parsedData, i+f, i+f+4));
+      data[uuid.toString()] = {
+        forwardX: bFloat(4*4), forwardY: bFloat(5*4), forwardZ: bFloat(6*4),
+        positionX: bFloat(7*4), positionY: bFloat(8*4), positionZ: bFloat(9*4),
+        orientationX: bFloat(10*4), orientationY: bFloat(11*4), orientationZ: bFloat(12*4),
+        enabled: parsedData[i+13*4]==1,
+      };
     }
     resolve(data);
   }));
 }
 
 // slice and add [first, last) bytes of Uint8Array, max 8 bytes
-function getBytes(data, first, last) {
+function sumBytes(data, first, last) {
   let out = 0;
   let bn = last-first;
   for (let n=first; n<last; n++) {
@@ -256,8 +281,8 @@ function UI_unhideInfo() {
 function UI_setWsState(text) {
   let e = document.querySelector('#ws-state');
   e.textContent = text;
-  if (text.includes('connected')) e.style['color'] = 'limegreen';
-  else if (text.includes('closed')) e.style['color'] = 'red';
+  if (text.includes('connected:')) e.style['color'] = 'limegreen';
+  else if (text.includes('closed:')) e.style['color'] = 'red';
 }
 function UI_addTr(uuid) {
   let tr = document.createElement('tr');

@@ -4,7 +4,10 @@ import io.github.keyboardcat1.minertc.MineRTC;
 import io.github.keyboardcat1.minertc.web.MCListener;
 import io.github.keyboardcat1.minertc.web.RTCListener;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A class to provide players with {@link AudioProcessingData} based on their relative positions
@@ -24,7 +27,6 @@ public class AudioProcessingDataGenerator {
             if (player.equals(other)) return;
             if (MCListener.sessions.get(other.getUniqueId()) == null || RTCListener.sessions.get(other.getUniqueId()) == null)
                 return;
-            // if (player.getLocation().distance(other.getLocation()) > THRESHOLD) return;
 
             out.put(other.getUniqueId(), playersToStreamProcessingData(player, other));
         });
@@ -38,18 +40,17 @@ public class AudioProcessingDataGenerator {
      * @return Processing data encoding the other's players position relative to the main player
      */
     protected static AudioProcessingData.StreamProcessingData playersToStreamProcessingData(Player main, Player other) {
-        double deltaX = other.getLocation().getX() - main.getLocation().getX();
-        double deltaY = other.getLocation().getY() - main.getLocation().getY();
-        double theta = Math.atan2(deltaY, deltaX);
+        Vector forward =  main.getEyeLocation().getDirection();
+        Location position = other.getEyeLocation().subtract(main.getEyeLocation());
+        Vector orientation = other.getEyeLocation().getDirection();
+        byte enabled = (byte)(position.length()<MAX_VOICE_DISTANCE-1 ? 1 : 0);
 
-        double distance = main.getLocation().distance(other.getLocation());
-        double deltaTheta = theta - Math.toRadians(main.getLocation().getYaw());
-
-        byte enabled = (byte)(distance<MAX_VOICE_DISTANCE-1 ? 1 : 0);
-        float gain = (float)(-1F/MAX_VOICE_DISTANCE*distance + 1);
-        float pan = (float) Math.sin(deltaTheta);
-
-        return new AudioProcessingData.StreamProcessingData(enabled, gain, pan);
+        return new AudioProcessingData.StreamProcessingData(
+                (float)forward.getX(),(float)forward.getY(),(float)forward.getZ(),
+                (float)position.getX(),(float)position.getY(),(float)position.getZ(),
+                (float)orientation.getX(),(float)orientation.getX(),(float)orientation.getX(),
+                enabled
+        );
     }
 
 

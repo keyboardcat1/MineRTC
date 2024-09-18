@@ -28,14 +28,16 @@ public class AudioProcessingData extends HashMap<UUID, AudioProcessingData.Strea
 
     /**
      * A record representing the required data to process a single player audio channel
-     * @param gain The gain factor, ranging from 0 to 1
-     * @param pan The pan factor, randing from -1 to 1
+     * TODO
      */
-    public record StreamProcessingData(byte enabled, float gain, float pan) {
+    public record StreamProcessingData(float forwardX, float forwardY, float forwardZ,
+                                       float positionX, float positionY, float positionZ,
+                                       float orientationX, float orientationY, float orientationZ,
+                                       byte enabled) {
         /**
          * The total size in bytes of all of this object's fields
          */
-        public static final int BYTES = Float.BYTES + Float.BYTES + Byte.BYTES;
+        public static final int BYTES = Byte.BYTES + 9*Float.BYTES ;
 
         /**
          * Converts this object into bytes
@@ -43,9 +45,10 @@ public class AudioProcessingData extends HashMap<UUID, AudioProcessingData.Strea
          */
         public ByteBuffer toBytes() {
             ByteBuffer out = ByteBuffer.allocate(BYTES);
-            out.putFloat(this.gain);
-            out.putFloat(this.pan);
-            out.put(this.enabled);
+            out.putFloat(forwardX); out.putFloat(forwardY); out.putFloat(forwardZ);
+            out.putFloat(positionX); out.putFloat(positionY); out.putFloat(positionZ);
+            out.putFloat(orientationX); out.putFloat(orientationY); out.putFloat(orientationZ);
+            out.put(enabled);
             return out;
         }
 
