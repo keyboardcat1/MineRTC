@@ -2,12 +2,13 @@ const { Uuid } = require('uuid-tool');
 
 
 const RTC_CONFIG = {
-  iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
 };
 
 
 const parsedUrl = new URL(window.location.href);
 if (!(parsedUrl.searchParams.get('u') && parsedUrl.searchParams.get('t'))) {
+  UI_setInputText('Connect with /connect in game');
   throw Error('Missing parameters \'u\' or \'t\' in URL.');
 }
 const localUuid = parsedUrl.searchParams.get('u');
@@ -46,13 +47,12 @@ function init() {
   MCSocket.addEventListener('close', ({ code, reason }) => UI_setWsState(`closed: ${code} ${reason}`))
 }
 
-window.addEventListener("beforeunload", closePeers);
+window.addEventListener('beforeunload', closePeers);
 
 // === WEBSOCKET HANDLERS ===
 // handle AudioProcessingData binary messages
 async function handleMC(ev) {
   const audioData = await audioDataFromBytes(ev.data);
-  console.log(audioData);
   for (const uuid in peers) {
     if (!(uuid in audioData))
       peers[uuid].close();
@@ -92,10 +92,10 @@ class Peer {
     this.gainNode = this.audioContext.createGain();
     this.pannerNode = this.audioContext.createPanner();
     // configuration
-    this.pannerNode.panningModel = "HRTF";
-    this.pannerNode.distanceModel = "linear";
+    this.pannerNode.panningModel = 'HRTF';
+    this.pannerNode.distanceModel = 'linear';
     this.pannerNode.refDistance = 1;
-    this.pannerNode.maxDistance = 50;
+    this.pannerNode.maxDistance = SERVER_CONFIG.maxDistance;
     this.pannerNode.rolloffFactor = 1;
     this.pannerNode.coneInnerAngle = 60;
     this.pannerNode.coneOuterAngle = 90;
@@ -136,13 +136,14 @@ class Peer {
     };
 
     UI_addTr(this.uuid);
+    UI_setTr(this.uuid, "new");
     this.pc.addEventListener('connectionstatechange', () => UI_setTr(this.uuid, this.pc.connectionState));
   }
 
   async handleSignal({ description, candidate }) {
     try {
       if (description) {
-        const offerCollision = description.type === "offer" && (this.makingOffer || this.pc.signalingState !== "stable");
+        const offerCollision = description.type === 'offer' && (this.makingOffer || this.pc.signalingState !== 'stable');
         const polite = localUuid > this.uuid;
         this.ignoreOffer = !polite && offerCollision;
         if (this.ignoreOffer) {
@@ -150,7 +151,7 @@ class Peer {
         }
 
         await this.pc.setRemoteDescription(description);
-        if (description.type === "offer") {
+        if (description.type === 'offer') {
           await this.pc.setLocalDescription();
           this.send({ description: this.pc.localDescription });
         }
@@ -178,7 +179,6 @@ class Peer {
     if (!this.receivedTrack) return;
     this.gainNode.gain.setValueAtTime(audioData.enabled?1:0, ct);
     if (!audioData.enabled) return;
-    let [upX, upY, upZ] = calculateUp([audioData.forwardX, audioData.forwardY, audioData.forwardZ]);
     if (this.audioContext.listener.forwardX) {
       this.audioContext.listener.forwardX.setValueAtTime(audioData.forwardX, ct);
       this.audioContext.listener.forwardY.setValueAtTime(audioData.forwardY, ct);
@@ -219,7 +219,7 @@ function audioDataFromBytes(data) {
     for (let i = 0; i < parsedData.length; i += BYTES) {
       let uuid = new Uuid();
       uuid.fromBytes(Array.from(parsedData.slice(i, i + 16)));
-      const bFloat = (f) => toFloat(sumBytes(parsedData, i+f, i+f+4));
+      const bFloat = (f) => toFloat(parsedData.slice(i+f, i+f+4));
       data[uuid.toString()] = {
         forwardX: bFloat(4*4), forwardY: bFloat(5*4), forwardZ: bFloat(6*4),
         positionX: bFloat(7*4), positionY: bFloat(8*4), positionZ: bFloat(9*4),
@@ -231,42 +231,11 @@ function audioDataFromBytes(data) {
   }));
 }
 
-// slice and add [first, last) bytes of Uint8Array, max 8 bytes
-function sumBytes(data, first, last) {
-  let out = 0;
-  let bn = last-first;
-  for (let n=first; n<last; n++) {
-    out += data[n] << 8*(bn-1);
-    bn--;
-  }
-  return out;
-}
-
-// bytes of uint32 to float32
-function toFloat(n) {
-  n = +n;
-  let res;
-  let mts = n & 0x007fffff;
-  let sgn = (n & 0x80000000) ? -1 : 1;
-  let exp = (n & 0x7f800000) >>> 23;
-  function mantissa(mts) {
-    let bit = 0x00400000;
-    while (mts && bit) {
-      mts /= 2;
-      bit >>>= 1;
-    }
-    return mts;
-  }
-  if (exp === 0xff) {
-    res = mts ? NaN : sgn * Infinity;
-  } else if (exp) {
-    res = sgn * ((1 + mantissa(mts)) * Math.pow(2, exp - 127));
-  } else if (mts) {
-    res = sgn * (mantissa(mts) * Math.pow(2, -126));
-  } else {
-    res = (sgn > 0) ? 0 : -0;
-  }
-  return res;
+// UInt8Array to float32
+function toFloat(arr) {
+  let buf = arr.buffer;
+  let view = new DataView(buf);
+  return view.getFloat32(0);
 }
 
 // === UI ===
@@ -274,14 +243,18 @@ function UI_hideInputText() {
   let e = document.querySelector('#input-text');
   e.style['display'] = 'none';
 }
+function UI_setInputText(text) {
+  let e = document.querySelector('#input-text');
+  e.textContent = text;
+}
 function UI_unhideInfo() {
   let e = document.querySelector('#info');
   e.style['display'] = 'block';
 }
-function UI_setWsState(text) {
+function UI_setWsState(text, color) {
   let e = document.querySelector('#ws-state');
   e.textContent = text;
-  if (text.includes('connected:')) e.style['color'] = 'limegreen';
+  if (text === 'connected') e.style['color'] = 'limegreen';
   else if (text.includes('closed:')) e.style['color'] = 'red';
 }
 function UI_addTr(uuid) {
@@ -301,7 +274,7 @@ function UI_setTr(uuid, state) {
   let td_state = tr.querySelector('.td-state');
   td_state.textContent = state;
   if (state === 'connected') td_state.style['color'] = 'limegreen';
-  else if (state in ['new', 'connecting']) td_state.style['color'] = 'yellow';
+  else if (state === 'new' || state === 'connecting') td_state.style['color'] = 'yellow';
   else td_state.style['color'] = 'red'
 }
 function UI_removeTr(uuid) {

@@ -11,6 +11,13 @@ body {
   font-family: 'Courier New', Courier, monospace;
 }
 
+#title {
+  width: 100%;
+  font-size: 10vw;
+  text-align: center;
+  position: absolute;
+}
+
 #wrapper {
   height: 100%;
   padding: 0% 10% 0% 10%;
@@ -25,11 +32,12 @@ body {
   display: none;
 }
 
+
 #ws-text {
   display: flex;
   flex-wrap: wrap;
   width: 100%;
-  margin: 100px 0 100px 0;
+  margin: 0 0 100px 0;
 }
 
 #ws-text>span {

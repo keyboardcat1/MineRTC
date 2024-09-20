@@ -51,7 +51,7 @@ public class AppServer {
 
         //http servlets
         ServletContextHandler servletContextHandler = new ServletContextHandler(server, "/");
-        servletContextHandler.addServlet(new ServletHolder(new MainServlet()), "/");
+        servletContextHandler.addServlet(new ServletHolder(new MainServlet()), "/*");
         //ws listeners
         servletContextHandler.addServlet(new ServletHolder(new StaticServlet()), "/static/*");
         JettyWebSocketServletContainerInitializer.configure(servletContextHandler, (servletContext, container) -> {

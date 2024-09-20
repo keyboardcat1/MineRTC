@@ -3,4 +3,5 @@ port: 8809
 
 connect-message: "Click to connect:"
 
+update-interval: 20
 max-voice-distance: 50
