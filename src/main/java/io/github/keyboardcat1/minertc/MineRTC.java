@@ -39,7 +39,7 @@ public class MineRTC extends JavaPlugin implements Listener {
 
         // start web server
         try {
-            String address =  MineRTC.getInstance().getConfig().getString("address");
+            String address = getConfig().getString("address");
             if (Objects.equals(address, "your.address"))
                 getLogger().warning("CONFIGURE YOUR SERVER ADDRESS IN CONFIG!");
             AppServer.main(new String[0]);
@@ -53,7 +53,8 @@ public class MineRTC extends JavaPlugin implements Listener {
         Objects.requireNonNull(getCommand("connect")).setExecutor(new ConnectCommand());
 
         // broadcast audio processing data every second
-        getServer().getScheduler().runTaskTimer(this, this::broadcastAudioProcessingData, 1L, 20L);
+        int interval = getConfig().getInt("update-interval");
+        getServer().getScheduler().runTaskTimer(this, this::broadcastAudioProcessingData, 1L, interval);
     }
 
     @EventHandler
