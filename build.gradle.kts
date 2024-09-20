@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "io.github.keyboardcat1.minertc"
-version = "1.0-SNAPSHOT"
+version = "1.0a0"
 
 repositories {
     mavenCentral()
