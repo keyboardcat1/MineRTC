@@ -1,6 +1,6 @@
 # MineRTC
 
-The easiest minecraft proximity chat plugin to use.
+Vanilla proximity chat!
 
 ## Description
 
