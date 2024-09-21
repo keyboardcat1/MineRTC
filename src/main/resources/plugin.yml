@@ -1,5 +1,5 @@
 name: MineRTC
-version: 1.0.0
+version: 0.1a0
 api-version: '1.19'
 main: io.github.keyboardcat1.minertc.MineRTC
 description: The easiest proximity chat plugin to use

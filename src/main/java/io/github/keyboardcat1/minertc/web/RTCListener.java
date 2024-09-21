@@ -1,13 +1,14 @@
 package io.github.keyboardcat1.minertc.web;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.github.keyboardcat1.minertc.MineRTC;
 import io.github.keyboardcat1.minertc.TokenManager;
 import org.bukkit.Bukkit;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -50,22 +51,25 @@ public class RTCListener implements WebSocketListener {
     @Override
     public void onWebSocketText(String message) {
         try {
-            Object obj = new JSONParser().parse(message);
-            JSONObject incoming = (JSONObject) obj;
-            JSONObject outgoing = new JSONObject();
+            JsonObject incoming = new Gson().fromJson(message, JsonObject.class);
+            JsonObject outgoing = new JsonObject();
 
-            String to = (String) incoming.get("to");
-            JSONObject data = (JSONObject) incoming.get("data");
+            JsonElement to = incoming.get("to");
+            JsonElement data = incoming.get("data");
 
-            if (sessions.get(UUID.fromString(to)) == null) return;
+            System.out.println(to.getAsString());
 
-            outgoing.put("from", uuid.toString());
-            outgoing.put("data", data);
+            if (sessions.get(UUID.fromString(to.getAsString())) == null) return;
 
-            sessions.get(UUID.fromString(to)).getRemote().sendString(outgoing.toString());
+            outgoing.addProperty("from", uuid.toString());
+            outgoing.add("data", data);
+
+            System.out.println(outgoing);
+            System.out.println("e");
 
 
-        } catch (ParseException ignored) {
+            sessions.get(UUID.fromString(to.getAsString())).getRemote().sendString(outgoing.toString());
+            System.out.println( sessions.get(UUID.fromString(to.getAsString())));
         } catch (IOException e) {
             MineRTC.getInstance().getLogger().warning("WS : Could not send string");
         }

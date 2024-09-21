@@ -1,10 +1,10 @@
 package io.github.keyboardcat1.minertc.web;
 
+import com.google.gson.JsonObject;
 import io.github.keyboardcat1.minertc.audio.AudioProcessingDataGenerator;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.json.simple.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,8 +30,8 @@ class MainServlet extends HttpServlet {
     }
 
     private static String constructConfigJSON() {
-        JSONObject out = new JSONObject();
-        out.put("maxDistance", AudioProcessingDataGenerator.MAX_VOICE_DISTANCE);
+        JsonObject out = new JsonObject();
+        out.addProperty("maxDistance", AudioProcessingDataGenerator.MAX_VOICE_DISTANCE);
         return out.toString();
     }
 }
