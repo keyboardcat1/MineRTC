@@ -283,16 +283,24 @@ function UI_removeTr(uuid) {
   document.getElementById(uuid).remove();
 }
 
+new QRCode(document.querySelector("#qrcode"), {
+  text: window.location.href,
+  colorLight : "#000000",
+  colorDark : "#ffffff",
+});
 document.querySelector("#fix").onclick = () => {
-  let e = document.getElementById("qrcode");
-  e.style['display'] = 'block';
-  document.querySelector('#connectivity').style['display'] = 'none';
-  new QRCode(e, {
-    text: window.location.href,
-    colorLight : "#000000",
-    colorDark : "#ffffff",
-  });
-  document.querySelector("#fix").onclick = undefined;
+  let e = document.querySelector("#qrcode");
+  let c = document.querySelector('#connectivity');
+  let a = document.querySelector('#fix');
+  if (e.style['display'] === 'block') {
+    e.style['display'] = 'none';
+    c.style['display'] = 'block';
+    a.textContent = 'Not working?';
+  } else {
+    e.style['display'] = 'block';
+    c.style['display'] = 'none';
+    a.textContent = 'Back';
+  }
 }
 
 
