@@ -9,7 +9,7 @@ const RTC_CONFIG = {
 const parsedUrl = new URL(window.location.href);
 if (!(parsedUrl.searchParams.get('u') && parsedUrl.searchParams.get('t'))) {
   UI_setInputText('Connect with /connect in game');
-  throw Error('Missing parameters \'u\' or \'t\' in URL.');
+  // throw Error('Missing parameters \'u\' or \'t\' in URL.');
 }
 const localUuid = parsedUrl.searchParams.get('u');
 
@@ -35,11 +35,12 @@ function init() {
   const RTC_URL = `wss://${parsedUrl.host}/ws/rtc${parsedUrl.search}`;
 
   MCSocket = new WebSocket(MC_URL);
-  MCSocket.onmessage = handleMC;
+  // MCSocket.onmessage = handleMC;
   MCSocket.onclose = ({ code, reason }) => { console.log(`/mc closed: ${code} ${reason}`); closePeers() };
 
 
   RTCSocket = new WebSocket(RTC_URL);
+  RTCSocket.onopen = () => MCSocket.onmessage = handleMC;
   RTCSocket.onmessage = handleRTC;
   RTCSocket.onclose = ({ code, reason }) => { console.log(`/rtc closed: ${code} ${reason}`); closePeers() };
 
@@ -134,6 +135,7 @@ class Peer {
       if (this.pc.connectionState in ['closed', 'failed'])
         this.close()
     };
+    this.pc.on
 
     UI_addTr(this.uuid);
     UI_setTr(this.uuid, "new");
@@ -195,10 +197,10 @@ class Peer {
   }
 
   close() {
-    this.pc.close();
-    this.element.remove();
-    delete peers[this.uuid];
     UI_removeTr(this.uuid);
+    this.element.remove();
+    this.pc.close();
+    delete peers[this.uuid];
   }
 }
 
@@ -280,6 +282,20 @@ function UI_setTr(uuid, state) {
 function UI_removeTr(uuid) {
   document.getElementById(uuid).remove();
 }
+
+document.querySelector("#fix").onclick = () => {
+  let e = document.getElementById("qrcode");
+  e.style['display'] = 'block';
+  document.querySelector('#connectivity').style['display'] = 'none';
+  new QRCode(e, {
+    text: window.location.href,
+    colorLight : "#000000",
+    colorDark : "#ffffff",
+  });
+  document.querySelector("#fix").onclick = undefined;
+}
+
+
 
 
 

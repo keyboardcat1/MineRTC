@@ -64,12 +64,7 @@ public class RTCListener implements WebSocketListener {
             outgoing.addProperty("from", uuid.toString());
             outgoing.add("data", data);
 
-            System.out.println(outgoing);
-            System.out.println("e");
-
-
             sessions.get(UUID.fromString(to.getAsString())).getRemote().sendString(outgoing.toString());
-            System.out.println( sessions.get(UUID.fromString(to.getAsString())));
         } catch (IOException e) {
             MineRTC.getInstance().getLogger().warning("WS : Could not send string");
         }
